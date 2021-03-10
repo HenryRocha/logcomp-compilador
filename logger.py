@@ -16,7 +16,7 @@ class Logger:
     def log(self, _type: LogTypes, msg: str):
         if self.debug:
             if _type == LogTypes.ERROR:
-                print(f"[DEBUG] {msg}")
+                print(f"[ERROR] {msg}")
                 exit(0)
             elif _type == LogTypes.NORMAL:
                 print(f"[LOG] {msg}")
