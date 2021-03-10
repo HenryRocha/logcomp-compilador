@@ -1,5 +1,5 @@
 from tokenizer import Tokenizer
-from token_types import TokenTypes
+from token import TokenTypes
 
 
 class Parser:

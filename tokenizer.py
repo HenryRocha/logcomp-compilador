@@ -1,5 +1,4 @@
-from token import Token
-from token_types import TokenTypes
+from token import Token, TokenTypes
 
 
 class Tokenizer:
