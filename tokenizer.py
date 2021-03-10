@@ -26,11 +26,11 @@ class Tokenizer:
         while c not in self.VALID_CHARACTERS:
             self.position += 1
 
-            if not self.isPositionValid(self.position):
+            if c not in self.VALID_CHARACTERS and c != " ":
+                raise ValueError(f"Unknown character '{c}'")
+            elif not self.isPositionValid(self.position):
                 self.actual = Token(None, TokenTypes.EOF)
                 return
-            elif c not in self.VALID_CHARACTERS and c != " ":
-                raise ValueError(f"Unknown character '{c}'")
             else:
                 c = self.origin[self.position]
 
@@ -46,7 +46,7 @@ class Tokenizer:
             self.position += len(numberBuilder) - 1
             self.actual = Token(numberBuilder, TokenTypes.NUMBER)
         else:
-            raise ValueError("Uknown character found.")
+            raise ValueError(f"Unknown character '{c}'")
 
     def isPositionValid(self, position: int):
         return position < len(self.origin)
