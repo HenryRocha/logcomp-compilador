@@ -9,7 +9,9 @@ class Parser:
         self.tokens.selectNext()
         previousToken = self.tokens.actual
 
-        if previousToken.tokenType != TokenTypes.NUMBER:
+        if previousToken.tokenType == TokenTypes.EOF:
+            raise ValueError("Empty input.")
+        elif previousToken.tokenType != TokenTypes.NUMBER:
             raise ValueError("First token is not a number.")
         else:
             result = int(previousToken.value)
@@ -25,6 +27,8 @@ class Parser:
                     result += int(self.tokens.actual.value)
                 elif previousToken.tokenType == TokenTypes.MINUS:
                     result -= int(self.tokens.actual.value)
+            elif self.tokens.actual.tokenType == TokenTypes.EOF and previousToken.tokenType != TokenTypes.NUMBER:
+                raise ValueError("Last token is not a number.")
 
             previousToken = self.tokens.actual
 

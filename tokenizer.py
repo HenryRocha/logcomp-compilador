@@ -29,8 +29,10 @@ class Tokenizer:
             if not self.isPositionValid(self.position):
                 self.actual = Token(None, TokenTypes.EOF)
                 return
-
-            c = self.origin[self.position]
+            elif c not in self.VALID_CHARACTERS and c != " ":
+                raise ValueError(f"Unknown character '{c}'")
+            else:
+                c = self.origin[self.position]
 
         if c == "+":
             self.actual = Token(c, TokenTypes.PLUS)
