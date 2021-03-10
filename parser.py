@@ -1,18 +1,23 @@
 from tokenizer import Tokenizer
 from token import TokenTypes
+from logger import Logger, LogTypes
 
 
 class Parser:
     tokens: Tokenizer
+    logger: Logger
+
+    def __init__(self, logger: Logger):
+        self.logger = logger
 
     def parseExpression(self):
         self.tokens.selectNext()
         previousToken = self.tokens.actual
 
         if previousToken.tokenType == TokenTypes.EOF:
-            raise ValueError("Empty input.")
+            self.logger.log(LogTypes.ERROR, "Empty input.")
         elif previousToken.tokenType != TokenTypes.NUMBER:
-            raise ValueError("First token is not a number.")
+            self.logger.log(LogTypes.ERROR, "First token is not a number.")
         else:
             result = int(previousToken.value)
 
@@ -20,7 +25,7 @@ class Parser:
             self.tokens.selectNext()
 
             if self.tokens.actual.tokenType == previousToken.tokenType:
-                raise ValueError("Duplicate token found.")
+                self.logger.log(LogTypes.ERROR, "Duplicate token found.")
 
             if self.tokens.actual.tokenType == TokenTypes.NUMBER:
                 if previousToken.tokenType == TokenTypes.PLUS:
@@ -28,12 +33,12 @@ class Parser:
                 elif previousToken.tokenType == TokenTypes.MINUS:
                     result -= int(self.tokens.actual.value)
             elif self.tokens.actual.tokenType == TokenTypes.EOF and previousToken.tokenType != TokenTypes.NUMBER:
-                raise ValueError("Last token is not a number.")
+                self.logger.log(LogTypes.ERROR, "Last token is not a number.")
 
             previousToken = self.tokens.actual
 
         return result
 
     def run(self, code: str):
-        self.tokens = Tokenizer(code)
+        self.tokens = Tokenizer(code, self.logger)
         return self.parseExpression()

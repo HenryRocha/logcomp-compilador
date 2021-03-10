@@ -1,4 +1,5 @@
 from token import Token, TokenTypes
+from logger import Logger, LogTypes
 
 
 class Tokenizer:
@@ -7,11 +8,13 @@ class Tokenizer:
     origin: str
     position: int
     actual: Token
+    logger: Logger
 
-    def __init__(self, code: str):
+    def __init__(self, code: str, logger: Logger):
         self.origin = code
         self.position = -1
         self.actual = None
+        self.logger = logger
 
     def selectNext(self):
         self.position += 1
@@ -26,7 +29,7 @@ class Tokenizer:
             self.position += 1
 
             if c not in self.VALID_CHARACTERS and c != " ":
-                raise ValueError(f"Unknown character '{c}'")
+                self.logger.log(LogTypes.ERROR, f"Unknown character '{c}'")
             elif not self.isPositionValid(self.position):
                 self.actual = Token(None, TokenTypes.EOF)
                 return
@@ -45,7 +48,7 @@ class Tokenizer:
             self.position += len(numberBuilder) - 1
             self.actual = Token(numberBuilder, TokenTypes.NUMBER)
         else:
-            raise ValueError(f"Unknown character '{c}'")
+            self.logger.log(LogTypes.ERROR, f"Unknown character '{c}'")
 
     def isPositionValid(self, position: int):
         return position < len(self.origin)
