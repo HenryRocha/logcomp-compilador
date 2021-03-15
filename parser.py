@@ -11,24 +11,25 @@ class Parser:
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def blockOne(self, blockTwoResult: float):
+    def blockOne(self, result: float):
         self.logger.log(LogTypes.NORMAL, "Started block one...")
-        result: float = blockTwoResult
 
         if self.tokens.actual.tokenType == TokenTypes.PLUS:
-            self.tokens.selectNext()
-            self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Adding...")
-            result += float(self.tokens.actual.value)
+            self.logger.log(LogTypes.NORMAL, "Calling block two and adding the result...")
+            result += self.blockTwo()
         elif self.tokens.actual.tokenType == TokenTypes.MINUS:
-            self.tokens.selectNext()
-            self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Subtracting...")
-            result -= float(self.tokens.actual.value)
+            self.logger.log(LogTypes.NORMAL, "Calling block two and subtracting the result...")
+            result -= self.blockTwo()
 
         self.logger.log(LogTypes.NORMAL, f"Ended block one, result is: {result}")
         return result
 
-    def blockTwo(self, result: float):
+    def blockTwo(self):
         self.logger.log(LogTypes.NORMAL, "Started block two...")
+
+        self.tokens.selectNext()
+        self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
+        result: float = float(self.tokens.actual.value)
 
         self.tokens.selectNext()
         self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
@@ -52,12 +53,9 @@ class Parser:
         return result
 
     def parseExpression(self):
-        self.tokens.selectNext()
-        result: float = float(self.tokens.actual.value)
-        self.logger.log(LogTypes.NORMAL, f"Consumed first number: {result}")
+        result: float = self.blockTwo()
 
         while self.tokens.actual.tokenType != TokenTypes.EOF:
-            result = self.blockTwo(result)
             result = self.blockOne(result)
 
         return result
