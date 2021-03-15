@@ -17,14 +17,14 @@ class Parser:
 
         if self.tokens.actual.tokenType == TokenTypes.PLUS:
             self.tokens.selectNext()
-            self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
+            self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Adding...")
             result += float(self.tokens.actual.value)
         elif self.tokens.actual.tokenType == TokenTypes.MINUS:
             self.tokens.selectNext()
-            self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
+            self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Subtracting...")
             result -= float(self.tokens.actual.value)
 
-        self.logger.log(LogTypes.NORMAL, "Ended block one...")
+        self.logger.log(LogTypes.NORMAL, f"Ended block one, result is: {result}")
         return result
 
     def blockTwo(self, result: float):
@@ -36,11 +36,11 @@ class Parser:
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
             if self.tokens.actual.tokenType == TokenTypes.MULTIPLY:
                 self.tokens.selectNext()
-                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
+                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying...")
                 result *= float(self.tokens.actual.value)
             elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
                 self.tokens.selectNext()
-                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
+                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Dividing...")
                 result /= float(self.tokens.actual.value)
 
             self.tokens.selectNext()
@@ -48,12 +48,13 @@ class Parser:
 
             self.logger.log(LogTypes.NORMAL, f"End of loop, current result is: {result}")
 
-        self.logger.log(LogTypes.NORMAL, "Ended block two...")
+        self.logger.log(LogTypes.NORMAL, f"Ended block two, result is: {result}")
         return result
 
     def parseExpression(self):
         self.tokens.selectNext()
         result: float = float(self.tokens.actual.value)
+        self.logger.log(LogTypes.NORMAL, f"Consumed first number: {result}")
 
         while self.tokens.actual.tokenType != TokenTypes.EOF:
             result = self.blockTwo(result)
