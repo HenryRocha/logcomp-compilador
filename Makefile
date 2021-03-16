@@ -74,6 +74,6 @@ invalid:
 	-python3 main.py $(ARGS) "1/*1"
 	-python3 main.py $(ARGS) "/*A*/1+1/*/*A*/*/"
 	-python3 main.py $(ARGS) "/*A*/1+1/*B/*C*/*/"
-	-python3 main.py $(ARGS) "3+ /* a */1"
-	-python3 main.py $(ARGS) "/* a */1"
+	-python3 main.py $(ARGS) "3+ /* a */"
+	-python3 main.py $(ARGS) "/* a */"
 	-python3 main.py $(ARGS) "3- 3 /* a"
