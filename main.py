@@ -17,8 +17,4 @@ if __name__ == "__main__":
 
     # Parse and calculate the result.
     result = Parser(Logger(args.debug)).run(originalMath)
-
-    if args.debug:
-        print(f"Result: {result}  ||  Eval result: {eval(originalMath)}")
-    else:
-        print(result)
+    print(result)
