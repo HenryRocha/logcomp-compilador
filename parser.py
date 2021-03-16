@@ -1,6 +1,7 @@
 from tokenizer import Tokenizer
 from token import TokenTypes
 from logger import Logger, LogTypes
+from preprocess import PreProcess
 
 
 class Parser:
@@ -79,5 +80,8 @@ class Parser:
         return result
 
     def run(self, code: str):
-        self.tokens = Tokenizer(code, self.logger)
+        preprocess: PreProcess = PreProcess()
+        filteredCode: str = preprocess.filter(code, self.logger)
+
+        self.tokens = Tokenizer(filteredCode, self.logger)
         return self.parseExpression()
