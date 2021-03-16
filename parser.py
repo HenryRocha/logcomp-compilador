@@ -4,6 +4,7 @@ from logger import Logger, LogTypes
 
 
 class Parser:
+    OPERATORS: [TokenTypes] = [TokenTypes.PLUS, TokenTypes.MINUS, TokenTypes.MULTIPLY, TokenTypes.DIVIDE]
     tokens: Tokenizer
     logger: Logger
     result: float
@@ -29,18 +30,35 @@ class Parser:
 
         self.tokens.selectNext()
         self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
-        result: float = float(self.tokens.actual.value)
+
+        if self.tokens.actual.tokenType != TokenTypes.NUMBER:
+            self.logger.log(LogTypes.ERROR, "First token in current expression is not a number.")
+        else:
+            result: float = float(self.tokens.actual.value)
 
         self.tokens.selectNext()
         self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
 
+        if self.tokens.actual.tokenType not in self.OPERATORS and self.tokens.actual.tokenType != TokenTypes.EOF:
+            self.logger.log(LogTypes.ERROR, "Second token is not an operator.")
+
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
             if self.tokens.actual.tokenType == TokenTypes.MULTIPLY:
                 self.tokens.selectNext()
+                if self.tokens.actual.tokenType in self.OPERATORS:
+                    self.logger.log(LogTypes.ERROR, "Two operators in a row.")
+                elif self.tokens.actual.tokenType == TokenTypes.EOF:
+                    self.logger.log(LogTypes.ERROR, "Ending operator is '*'.")
+
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying...")
                 result *= float(self.tokens.actual.value)
             elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
                 self.tokens.selectNext()
+                if self.tokens.actual.tokenType in self.OPERATORS:
+                    self.logger.log(LogTypes.ERROR, "Two operators in a row.")
+                elif self.tokens.actual.tokenType == TokenTypes.EOF:
+                    self.logger.log(LogTypes.ERROR, "Ending operator is '/'.")
+
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Dividing...")
                 result /= float(self.tokens.actual.value)
 
