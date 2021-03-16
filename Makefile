@@ -27,6 +27,16 @@ valid:
 	-python3 main.py $(ARGS) "32/2/2/2/2/2+1"
 	-python3 main.py $(ARGS) "32/2/2/2/2/2+1+32/2/2/2/2/2"
 	-python3 main.py $(ARGS) "32/2/2/2/2/2+1+32/2/2/2/2/2+1+32/2/2/2/2/2"
+	-python3 main.py $(ARGS) "/*A*/1+1/*B*/"
+	-python3 main.py $(ARGS) "/*A*/1+1/*B*//*B*//*B*/"
+	-python3 main.py $(ARGS) "/*A*//*A*//*A*/1+1/*B*//*B*//*B*/"
+	-python3 main.py $(ARGS) "/*A*/1/*B*/+/*C*/1/*D*/"
+	-python3 main.py $(ARGS) "/* a */ 1 /* b */"
+	-python3 main.py $(ARGS) "3-2"
+	-python3 main.py $(ARGS) "11+22-33 /* a */"
+	-python3 main.py $(ARGS) "4/2+3"
+	-python3 main.py $(ARGS) "3+4/2"
+	-python3 main.py $(ARGS) "2 + 3 */* a */5"
 
 invalid:
 	# These should throw some kind of error.
@@ -62,3 +72,8 @@ invalid:
 	-python3 main.py $(ARGS) "1/+1"
 	-python3 main.py $(ARGS) "1/-1"
 	-python3 main.py $(ARGS) "1/*1"
+	-python3 main.py $(ARGS) "/*A*/1+1/*/*A*/*/"
+	-python3 main.py $(ARGS) "/*A*/1+1/*B/*C*/*/"
+	-python3 main.py $(ARGS) "3+ /* a */1"
+	-python3 main.py $(ARGS) "/* a */1"
+	-python3 main.py $(ARGS) "3- 3 /* a"
