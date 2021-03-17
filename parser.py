@@ -8,12 +8,12 @@ class Parser:
     OPERATORS: [TokenTypes] = [TokenTypes.PLUS, TokenTypes.MINUS, TokenTypes.MULTIPLY, TokenTypes.DIVIDE]
     tokens: Tokenizer
     logger: Logger
-    result: float
+    result: int
 
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def blockOne(self, result: float):
+    def blockOne(self, result: int) -> int:
         self.logger.log(LogTypes.NORMAL, "Started block one...")
 
         if self.tokens.actual.tokenType == TokenTypes.PLUS:
@@ -26,7 +26,7 @@ class Parser:
         self.logger.log(LogTypes.NORMAL, f"Ended block one, result is: {result}")
         return result
 
-    def blockTwo(self):
+    def blockTwo(self) -> int:
         self.logger.log(LogTypes.NORMAL, "Started block two...")
 
         self.tokens.selectNext()
@@ -35,7 +35,7 @@ class Parser:
         if self.tokens.actual.tokenType != TokenTypes.NUMBER:
             self.logger.log(LogTypes.ERROR, "First token in current expression is not a number.")
         else:
-            result: float = float(self.tokens.actual.value)
+            result: int = int(self.tokens.actual.value)
 
         self.tokens.selectNext()
         self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
@@ -52,7 +52,7 @@ class Parser:
                     self.logger.log(LogTypes.ERROR, "Ending operator is '*'.")
 
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying...")
-                result *= float(self.tokens.actual.value)
+                result *= int(self.tokens.actual.value)
             elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
                 self.tokens.selectNext()
                 if self.tokens.actual.tokenType in self.OPERATORS:
@@ -61,7 +61,7 @@ class Parser:
                     self.logger.log(LogTypes.ERROR, "Ending operator is '/'.")
 
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Dividing...")
-                result /= float(self.tokens.actual.value)
+                result //= int(self.tokens.actual.value)
 
             self.tokens.selectNext()
             self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
@@ -71,8 +71,8 @@ class Parser:
         self.logger.log(LogTypes.NORMAL, f"Ended block two, result is: {result}")
         return result
 
-    def parseExpression(self):
-        result: float = self.blockTwo()
+    def parseExpression(self) -> int:
+        result: int = self.blockTwo()
 
         while self.tokens.actual.tokenType != TokenTypes.EOF:
             result = self.blockOne(result)
