@@ -1,11 +1,12 @@
 from tokenizer import Tokenizer
-from token import TokenTypes
+from tokens import TokenTypes
 from logger import Logger, LogTypes
 from preprocess import PreProcess
 
 
 class Parser:
     OPERATORS: [TokenTypes] = [TokenTypes.PLUS, TokenTypes.MINUS, TokenTypes.MULTIPLY, TokenTypes.DIVIDE]
+    MARKERS: [TokenTypes] = [TokenTypes.LEFT_PARENTHESIS, TokenTypes.RIGHT_PARENTHESIS]
     tokens: Tokenizer
     logger: Logger
     result: int
@@ -14,7 +15,7 @@ class Parser:
         self.logger = logger
 
     def blockOne(self, result: int) -> int:
-        self.logger.log(LogTypes.NORMAL, "Started block one...")
+        self.logger.log(LogTypes.NORMAL, f"Started block one... current total is: {result}")
 
         if self.tokens.actual.tokenType == TokenTypes.PLUS:
             self.logger.log(LogTypes.NORMAL, "Calling block two and adding the result...")
@@ -24,44 +25,31 @@ class Parser:
             result -= self.blockTwo()
 
         self.logger.log(LogTypes.NORMAL, f"Ended block one, result is: {result}")
-        return result
+        return int(result)
 
     def blockTwo(self) -> int:
         self.logger.log(LogTypes.NORMAL, "Started block two...")
-
-        self.tokens.selectNext()
-        self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}")
-
-        if self.tokens.actual.tokenType != TokenTypes.NUMBER:
-            self.logger.log(LogTypes.ERROR, "First token in current expression is not a number.")
-        else:
-            result: int = int(self.tokens.actual.value)
+        self.logger.log(LogTypes.NORMAL, "Calling block three...")
+        result: int = self.blockThree()
+        self.logger.log(LogTypes.NORMAL, "Ended call to block three...")
 
         self.tokens.selectNext()
         self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
-
-        if self.tokens.actual.tokenType not in self.OPERATORS and self.tokens.actual.tokenType != TokenTypes.EOF:
-            self.logger.log(LogTypes.ERROR, "Second token is not an operator.")
+        if (
+            self.tokens.actual.tokenType not in self.OPERATORS
+            and self.tokens.actual.tokenType not in self.MARKERS
+            and self.tokens.actual.tokenType != TokenTypes.EOF
+        ):
+            self.logger.log(LogTypes.ERROR, f"Block two did not consume a operator: '{self.tokens.actual}'")
 
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
             if self.tokens.actual.tokenType == TokenTypes.MULTIPLY:
-                self.tokens.selectNext()
-                if self.tokens.actual.tokenType in self.OPERATORS:
-                    self.logger.log(LogTypes.ERROR, "Two operators in a row.")
-                elif self.tokens.actual.tokenType == TokenTypes.EOF:
-                    self.logger.log(LogTypes.ERROR, "Ending operator is '*'.")
-
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying...")
-                result *= int(self.tokens.actual.value)
-            elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
-                self.tokens.selectNext()
-                if self.tokens.actual.tokenType in self.OPERATORS:
-                    self.logger.log(LogTypes.ERROR, "Two operators in a row.")
-                elif self.tokens.actual.tokenType == TokenTypes.EOF:
-                    self.logger.log(LogTypes.ERROR, "Ending operator is '/'.")
+                result *= self.blockThree()
 
+            elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Dividing...")
-                result //= int(self.tokens.actual.value)
+                result /= self.blockThree()
 
             self.tokens.selectNext()
             self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
@@ -69,17 +57,49 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, f"End of loop, current result is: {result}")
 
         self.logger.log(LogTypes.NORMAL, f"Ended block two, result is: {result}")
-        return result
+        return int(result)
+
+    def blockThree(self) -> int:
+        self.logger.log(LogTypes.NORMAL, "Started block three...")
+        result: int = 0
+        self.tokens.selectNext()
+
+        if self.tokens.actual.tokenType == TokenTypes.NUMBER:
+            self.logger.log(LogTypes.NORMAL, f"Consumed number {self.tokens.actual}")
+            result = self.tokens.actual.value
+
+        elif self.tokens.actual.tokenType == TokenTypes.PLUS:
+            self.logger.log(LogTypes.NORMAL, f"Consumed plus {self.tokens.actual}")
+            self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
+            result += self.blockThree()
+            self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
+
+        elif self.tokens.actual.tokenType == TokenTypes.MINUS:
+            self.logger.log(LogTypes.NORMAL, f"Consumed minus {self.tokens.actual}")
+            self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
+            result -= self.blockThree()
+            self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
+
+        elif self.tokens.actual.tokenType == TokenTypes.LEFT_PARENTHESIS:
+            self.logger.log(LogTypes.NORMAL, f"Consumed parenthesis {self.tokens.actual}")
+            self.logger.log(LogTypes.NORMAL, "Started expression RECURSION...")
+            result = self.parseExpression()
+            self.logger.log(LogTypes.NORMAL, "Ended expression RECURSION...")
+        else:
+            self.logger.log(LogTypes.ERROR, f"Unexpected token on block three: '{self.tokens.actual}'")
+
+        self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {result}")
+        return int(result)
 
     def parseExpression(self) -> int:
         result: int = self.blockTwo()
 
-        while self.tokens.actual.tokenType != TokenTypes.EOF:
+        while self.tokens.actual.tokenType == TokenTypes.PLUS or self.tokens.actual.tokenType == TokenTypes.MINUS:
             result = self.blockOne(result)
 
-        return result
+        return int(result)
 
-    def run(self, code: str):
+    def run(self, code: str) -> int:
         preprocess: PreProcess = PreProcess()
         filteredCode: str = preprocess.filter(code, self.logger)
 

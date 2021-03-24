@@ -6,6 +6,7 @@ class PreProcess:
     COMMENT_START = "/*"
     COMMENT_END = "*/"
     commentRegex: str = r"/\*.*?\*/"
+    parenthesisRegex: str = r"\(.*?\)"
     logger: Logger
 
     def filter(self, code: str, logger: Logger) -> str:
@@ -16,4 +17,8 @@ class PreProcess:
             logger.log(LogTypes.ERROR, "Input contains invalid comments")
         else:
             logger.log(LogTypes.NORMAL, f"Pre processed input: {filteredCode}")
-            return filteredCode
+
+        if filteredCode.count("(") != filteredCode.count(")"):
+            logger.log(LogTypes.ERROR, "Input contains invalid parenthesis")
+
+        return filteredCode

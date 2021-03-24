@@ -1,9 +1,9 @@
-from token import Token, TokenTypes
+from tokens import Token, TokenTypes
 from logger import Logger, LogTypes
 
 
 class Tokenizer:
-    VALID_CHARACTERS: [str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "+", "-", "*", "/"]
+    VALID_CHARACTERS: [str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "+", "-", "*", "/", "(", ")"]
     origin: str
     position: int
     actual: Token
@@ -43,6 +43,10 @@ class Tokenizer:
             self.actual = Token(c, TokenTypes.MULTIPLY)
         elif c == "/":
             self.actual = Token(c, TokenTypes.DIVIDE)
+        elif c == "(":
+            self.actual = Token(c, TokenTypes.LEFT_PARENTHESIS)
+        elif c == ")":
+            self.actual = Token(c, TokenTypes.RIGHT_PARENTHESIS)
         elif c.isdigit():
             numberBuilder = [char if char.isdigit() else "X" for char in self.origin[self.position :]]
             numberBuilder = "".join(numberBuilder).split("X")[0]
