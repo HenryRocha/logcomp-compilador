@@ -24,12 +24,12 @@ class Parser:
             result -= self.blockTwo()
 
         self.logger.log(LogTypes.NORMAL, f"Ended block one, result is: {result}")
-        return result
+        return int(result)
 
     def blockTwo(self) -> int:
         self.logger.log(LogTypes.NORMAL, "Started block two...")
         self.logger.log(LogTypes.NORMAL, "Calling block three...")
-        result: int = int(self.blockThree())
+        result: int = self.blockThree()
         self.logger.log(LogTypes.NORMAL, "Ended call to block three...")
 
         self.tokens.selectNext()
@@ -38,11 +38,11 @@ class Parser:
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
             if self.tokens.actual.tokenType == TokenTypes.MULTIPLY:
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying...")
-                result *= int(self.blockThree())
+                result *= self.blockThree()
 
             elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
                 self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Dividing...")
-                result //= int(self.blockThree())
+                result /= self.blockThree()
 
             self.tokens.selectNext()
             self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
@@ -50,7 +50,7 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, f"End of loop, current result is: {result}")
 
         self.logger.log(LogTypes.NORMAL, f"Ended block two, result is: {result}")
-        return result
+        return int(result)
 
     def blockThree(self) -> int:
         self.logger.log(LogTypes.NORMAL, "Started block three...")
@@ -64,13 +64,13 @@ class Parser:
         elif self.tokens.actual.tokenType == TokenTypes.PLUS:
             self.logger.log(LogTypes.NORMAL, f"Consumed plus {self.tokens.actual}")
             self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
-            result += int(self.blockThree())
+            result += self.blockThree()
             self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
 
         elif self.tokens.actual.tokenType == TokenTypes.MINUS:
             self.logger.log(LogTypes.NORMAL, f"Consumed minus {self.tokens.actual}")
             self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
-            result -= int(self.blockThree())
+            result -= self.blockThree()
             self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
 
         elif self.tokens.actual.tokenType == TokenTypes.LEFT_PARENTHESIS:
@@ -80,17 +80,17 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, "Ended expression RECURSION...")
 
         self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {result}")
-        return result
+        return int(result)
 
     def parseExpression(self) -> int:
         result: int = self.blockTwo()
 
-        while self.tokens.actual.tokenType != TokenTypes.EOF and self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+        while self.tokens.actual.tokenType == TokenTypes.PLUS or self.tokens.actual.tokenType == TokenTypes.MINUS:
             result = self.blockOne(result)
 
-        return result
+        return int(result)
 
-    def run(self, code: str):
+    def run(self, code: str) -> int:
         preprocess: PreProcess = PreProcess()
         filteredCode: str = preprocess.filter(code, self.logger)
 
