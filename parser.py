@@ -6,6 +6,7 @@ from preprocess import PreProcess
 
 class Parser:
     OPERATORS: [TokenTypes] = [TokenTypes.PLUS, TokenTypes.MINUS, TokenTypes.MULTIPLY, TokenTypes.DIVIDE]
+    MARKERS: [TokenTypes] = [TokenTypes.LEFT_PARENTHESIS, TokenTypes.RIGHT_PARENTHESIS]
     tokens: Tokenizer
     logger: Logger
     result: int
@@ -34,6 +35,12 @@ class Parser:
 
         self.tokens.selectNext()
         self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
+        if (
+            self.tokens.actual.tokenType not in self.OPERATORS
+            and self.tokens.actual.tokenType not in self.MARKERS
+            and self.tokens.actual.tokenType != TokenTypes.EOF
+        ):
+            self.logger.log(LogTypes.ERROR, f"Block two did not consume a operator: '{self.tokens.actual}'")
 
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
             if self.tokens.actual.tokenType == TokenTypes.MULTIPLY:
@@ -78,6 +85,8 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, "Started expression RECURSION...")
             result = self.parseExpression()
             self.logger.log(LogTypes.NORMAL, "Ended expression RECURSION...")
+        else:
+            self.logger.log(LogTypes.ERROR, f"Unexpected token on block three: '{self.tokens.actual}'")
 
         self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {result}")
         return int(result)
