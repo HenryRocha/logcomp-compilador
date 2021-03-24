@@ -7,7 +7,9 @@ class TokenTypes(Enum):
     MINUS = 3
     MULTIPLY = 4
     DIVIDE = 5
-    EOF = 6
+    LEFT_PARENTHESIS = 6
+    RIGHT_PARENTHESIS = 7
+    EOF = 8
 
 
 class Token:
