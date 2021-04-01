@@ -23,7 +23,7 @@ def main() -> None:
 
     # Parse and calculate the result.
     result = Parser(Logger(debug)).run(originalMath)
-    print(result)
+    print(int(result.evaluate()))
 
 
 if __name__ == "__main__":

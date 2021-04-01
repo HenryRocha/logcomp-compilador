@@ -1,7 +1,8 @@
-from tokenizer import Tokenizer
-from tokens import TokenTypes
 from logger import Logger, LogTypes
+from node import Node, BinOp, UnOp, IntVal, NoOp
 from preprocess import PreProcess
+from tokenizer import Tokenizer
+from tokens import Token, TokenTypes
 
 
 class Parser:
@@ -14,23 +15,23 @@ class Parser:
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def blockOne(self, result: int) -> int:
+    def blockOne(self, result: Node) -> Node:
         self.logger.log(LogTypes.NORMAL, f"Started block one... current total is: {result}")
 
         if self.tokens.actual.tokenType == TokenTypes.PLUS:
             self.logger.log(LogTypes.NORMAL, "Calling block two and adding the result...")
-            result += self.blockTwo()
+            result = BinOp(value=self.tokens.actual, left=result, right=self.blockTwo())
         elif self.tokens.actual.tokenType == TokenTypes.MINUS:
             self.logger.log(LogTypes.NORMAL, "Calling block two and subtracting the result...")
-            result -= self.blockTwo()
+            result = BinOp(value=self.tokens.actual, left=result, right=self.blockTwo())
 
         self.logger.log(LogTypes.NORMAL, f"Ended block one, result is: {result}")
-        return int(result)
+        return result
 
-    def blockTwo(self) -> int:
+    def blockTwo(self) -> Node:
         self.logger.log(LogTypes.NORMAL, "Started block two...")
         self.logger.log(LogTypes.NORMAL, "Calling block three...")
-        result: int = self.blockThree()
+        result: Node = self.blockThree()
         self.logger.log(LogTypes.NORMAL, "Ended call to block three...")
 
         self.tokens.selectNext()
@@ -43,13 +44,9 @@ class Parser:
             self.logger.log(LogTypes.ERROR, f"Block two did not consume a operator: '{self.tokens.actual}'")
 
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
-            if self.tokens.actual.tokenType == TokenTypes.MULTIPLY:
-                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying...")
-                result *= self.blockThree()
-
-            elif self.tokens.actual.tokenType == TokenTypes.DIVIDE:
-                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Dividing...")
-                result /= self.blockThree()
+            if self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
+                self.logger.log(LogTypes.NORMAL, f"Consumed number: {self.tokens.actual}. Multiplying/dividing...")
+                result = BinOp(value=self.tokens.actual, left=result, right=self.blockThree())
 
             self.tokens.selectNext()
             self.logger.log(LogTypes.NORMAL, f"Consumed operator {self.tokens.actual}")
@@ -57,47 +54,44 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, f"End of loop, current result is: {result}")
 
         self.logger.log(LogTypes.NORMAL, f"Ended block two, result is: {result}")
-        return int(result)
+        return result
 
-    def blockThree(self) -> int:
+    def blockThree(self) -> Node:
         self.logger.log(LogTypes.NORMAL, "Started block three...")
-        result: int = 0
-        self.tokens.selectNext()
 
+        self.tokens.selectNext()
         if self.tokens.actual.tokenType == TokenTypes.NUMBER:
             self.logger.log(LogTypes.NORMAL, f"Consumed number {self.tokens.actual}")
-            result = self.tokens.actual.value
+            ret: IntVal = IntVal(value=self.tokens.actual)
+            self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {ret}")
+            return ret
 
-        elif self.tokens.actual.tokenType == TokenTypes.PLUS:
-            self.logger.log(LogTypes.NORMAL, f"Consumed plus {self.tokens.actual}")
+        elif self.tokens.actual.tokenType == TokenTypes.PLUS or self.tokens.actual.tokenType == TokenTypes.MINUS:
+            self.logger.log(LogTypes.NORMAL, f"Consumed plus/minus {self.tokens.actual}")
             self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
-            result += self.blockThree()
+            ret: UnOp = UnOp(value=self.tokens.actual, left=self.blockThree())
             self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
-
-        elif self.tokens.actual.tokenType == TokenTypes.MINUS:
-            self.logger.log(LogTypes.NORMAL, f"Consumed minus {self.tokens.actual}")
-            self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
-            result -= self.blockThree()
-            self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
+            self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {ret}")
+            return ret
 
         elif self.tokens.actual.tokenType == TokenTypes.LEFT_PARENTHESIS:
             self.logger.log(LogTypes.NORMAL, f"Consumed parenthesis {self.tokens.actual}")
             self.logger.log(LogTypes.NORMAL, "Started expression RECURSION...")
-            result = self.parseExpression()
+            ret: Node = self.parseExpression()
             self.logger.log(LogTypes.NORMAL, "Ended expression RECURSION...")
+            self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {ret}")
+            return ret
+
         else:
             self.logger.log(LogTypes.ERROR, f"Unexpected token on block three: '{self.tokens.actual}'")
 
-        self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {result}")
-        return int(result)
-
-    def parseExpression(self) -> int:
-        result: int = self.blockTwo()
+    def parseExpression(self) -> Node:
+        result: Node = self.blockTwo()
 
         while self.tokens.actual.tokenType == TokenTypes.PLUS or self.tokens.actual.tokenType == TokenTypes.MINUS:
             result = self.blockOne(result)
 
-        return int(result)
+        return result
 
     def run(self, code: str) -> int:
         preprocess: PreProcess = PreProcess()
