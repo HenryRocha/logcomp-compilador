@@ -42,6 +42,8 @@ class Parser:
             and self.tokens.actual.tokenType != TokenTypes.EOF
         ):
             self.logger.log(LogTypes.ERROR, f"Block two did not consume a operator: '{self.tokens.actual}'")
+        elif self.tokens.actual.tokenType == TokenTypes.LEFT_PARENTHESIS and type(result) == IntVal:
+            self.logger.log(LogTypes.ERROR, f"Block two found unexpected parenthesis: '{self.tokens.actual}'")
 
         while self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
             if self.tokens.actual.tokenType == TokenTypes.MULTIPLY or self.tokens.actual.tokenType == TokenTypes.DIVIDE:
