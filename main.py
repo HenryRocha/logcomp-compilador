@@ -5,29 +5,20 @@ from logger import Logger
 
 
 def main() -> None:
-    # Default variables.
-    debug = False
-    originalMath = ""
+    # Argparse, to enalbe the debug flag.
+    parser = argparse.ArgumentParser()
+    parser.add_argument(dest="sourceFile", type=str, help="source code")
+    parser.add_argument("-d", "--debug", action="store_true", help="run in debug mode", default=False)
+    args = parser.parse_args()
 
-    if len(sys.argv) == 1:
-        raise ValueError(f"No arguments given")
-    elif len(sys.argv) == 2:
-        try:
-            with open(sys.argv[1]) as f:
-                originalMath = f.read()
-        except:
-            originalMath = sys.argv[1]
-    elif len(sys.argv) == 3:
-        if sys.argv[1] == "-d":
-            debug = True
-        if sys.argv[2] != "" and sys.argv[2] != "-d":
-            originalMath = sys.argv[2]
-        else:
-            raise ValueError("Bad arguments")
+    try:
+        with open(str(args.sourceFile).strip(), "r") as f:
+            sourceCode = f.read()
+    except:
+        raise ValueError(f"No file named '{args.sourceFile}'")
 
     # Parse and calculate the result.
-    result = Parser(Logger(debug)).run(originalMath)
-    print(int(result.evaluate()))
+    Parser(Logger(args.debug)).run(sourceCode)
 
 
 if __name__ == "__main__":

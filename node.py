@@ -64,3 +64,11 @@ class NoOp(Node):
 
     def evaluate(self) -> int:
         return 0
+
+
+class Print(Node):
+    def __init__(self, value: Token, left: Node):
+        super().__init__(value=value, left=left)
+
+    def evaluate(self):
+        print(self.children[0].evaluate())
