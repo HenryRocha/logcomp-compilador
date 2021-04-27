@@ -1,5 +1,5 @@
 from logger import Logger, LogTypes
-from node import Node, BinOp, UnOp, IntVal, NoOp
+from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print
 from preprocess import PreProcess
 from tokenizer import Tokenizer
 from tokens import Token, TokenTypes
@@ -101,24 +101,27 @@ class Parser:
 
         self.tokens.selectNext()
         while self.tokens.actual.tokenType != TokenTypes.EOF:
-            self.parseCommand()
+            statement: Node = self.parseCommand()
+            statement.evaluate(symbolTable=self.symbolTable)
             self.tokens.selectNext()
 
         self.logger.log(LogTypes.NORMAL, f"Ended ParseBlock...")
 
-    def parseCommand(self) -> None:
+    def parseCommand(self) -> Node:
         self.logger.log(LogTypes.NORMAL, f"Started ParseCommand...")
+
+        ret: Node = None
 
         if self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
             self.logger.log(LogTypes.NORMAL, f"Consumed identifier '{self.tokens.actual}'")
-            identifier: str = self.tokens.actual.value
+            variableName: str = self.tokens.actual.value
 
             self.tokens.selectNext()
             if self.tokens.actual.tokenType != TokenTypes.ASSIGN:
                 self.logger.log(LogTypes.ERROR, f"Identifier is followed by '{self.tokens.actual}' instead of '='")
 
-            self.logger.log(LogTypes.NORMAL, f"Calling ParseExpression to set the variable's value...")
-            self.symbolTable.setVar(identifier, self.parseExpression())
+            self.logger.log(LogTypes.NORMAL, f"Calling ParseExpression to create the variable's AST...")
+            ret = Identifier(value=variableName, left=self.parseExpression())
             self.logger.log(LogTypes.NORMAL, f"Ended call to ParseExpression...")
 
             if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
@@ -132,7 +135,7 @@ class Parser:
                 self.logger.log(LogTypes.ERROR, f"Println is followed by '{self.tokens.actual}' instead of '('")
 
             self.logger.log(LogTypes.NORMAL, f"Calling ParseExpression to create Println's AST...")
-            exp: Node = self.parseExpression()
+            ret = Print(value=self.tokens.actual.value, left=self.parseExpression())
             self.logger.log(LogTypes.NORMAL, f"Ended call to ParseExpression...")
 
             if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
@@ -142,12 +145,11 @@ class Parser:
             if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
                 self.logger.log(LogTypes.ERROR, f"Println ')' is followed by '{self.tokens.actual}' instead of ';'")
 
-            print(exp.evaluate())
-
         else:
             self.logger.log(LogTypes.ERROR, f"Command does not start with IDENTIFIER or PRINT")
 
         self.logger.log(LogTypes.NORMAL, f"Ended ParseCommand...")
+        return ret
 
     def parseExpression(self) -> Node:
         result: Node = self.blockTwo()
