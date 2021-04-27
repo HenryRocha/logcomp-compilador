@@ -57,7 +57,7 @@ class Tokenizer:
             self.actual = Token(c, TokenTypes.SEPARATOR)
 
         elif c.isalpha():
-            wordBuilder = [char if char.isalpha() or c.isdigit() or c == "_" else "@" for char in self.origin[self.position :]]
+            wordBuilder = [char if (char.isalnum() or char == "_") else "@" for char in self.origin[self.position :]]
             wordBuilder = "".join(wordBuilder).split("@")[0]
             self.position += len(wordBuilder) - 1
 
