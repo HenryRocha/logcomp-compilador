@@ -10,6 +10,10 @@ class TokenTypes(Enum):
     LEFT_PARENTHESIS = 6
     RIGHT_PARENTHESIS = 7
     EOF = 8
+    IDENTIFIER = 9
+    ASSIGN = 10
+    SEPARATOR = 11
+    PRINT = 12
 
 
 class Token:
