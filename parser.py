@@ -150,8 +150,6 @@ class Parser:
 
             ret = NoOp(value=self.tokens.actual.value)
 
-            self.tokens.selectNext()
-
         else:
             self.logger.log(LogTypes.ERROR, f"Command does not start with IDENTIFIER or PRINT")
 
