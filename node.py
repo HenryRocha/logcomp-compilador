@@ -72,7 +72,7 @@ class Print(Node):
         super().__init__(value=value, left=left)
 
     def evaluate(self, symbolTable: SymbolTable) -> None:
-        print(self.children[0].evaluate(symbolTable=symbolTable))
+        print(int(self.children[0].evaluate(symbolTable=symbolTable)))
 
 
 class Identifier(Node):
