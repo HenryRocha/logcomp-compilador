@@ -145,6 +145,11 @@ class Parser:
             if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
                 self.logger.log(LogTypes.ERROR, f"Println ')' is followed by '{self.tokens.actual}' instead of ';'")
 
+        elif self.tokens.actual.tokenType == TokenTypes.SEPARATOR:
+            self.logger.log(LogTypes.NORMAL, f"Consumed separator '{self.tokens.actual}'")
+
+            ret = NoOp(value=self.tokens.actual.value)
+
         else:
             self.logger.log(LogTypes.ERROR, f"Command does not start with IDENTIFIER or PRINT")
 
