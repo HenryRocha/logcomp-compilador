@@ -63,6 +63,8 @@ class Tokenizer:
 
             if wordBuilder == "println":
                 self.actual = Token(wordBuilder, TokenTypes.PRINT)
+            elif wordBuilder == "readln":
+                self.actual = Token(wordBuilder, TokenTypes.READLN)
             else:
                 self.actual = Token(wordBuilder, TokenTypes.IDENTIFIER)
 

@@ -81,3 +81,15 @@ class Identifier(Node):
 
     def evaluate(self, symbolTable: SymbolTable) -> None:
         symbolTable.setVar(self.value, self.children[0])
+
+
+class Readln(Node):
+    def __init__(self, value: Token):
+        super().__init__(value=value)
+
+    def evaluate(self, symbolTable: SymbolTable) -> None:
+        inputStr: str = str(input())
+        if inputStr.isnumeric():
+            return int(inputStr)
+        else:
+            raise ValueError("Readln input must be an integer")

@@ -1,5 +1,5 @@
 from logger import Logger, LogTypes
-from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print
+from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print, Readln
 from preprocess import PreProcess
 from tokenizer import Tokenizer
 from tokens import Token, TokenTypes
@@ -92,6 +92,19 @@ class Parser:
             ret: Node = self.symbolTable.getVar(self.tokens.actual.value)
             self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {ret}")
             return ret
+
+        elif self.tokens.actual.tokenType == TokenTypes.READLN:
+            self.logger.log(LogTypes.NORMAL, f"Consumed READLN {self.tokens.actual}")
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.LEFT_PARENTHESIS:
+                self.logger.log(LogTypes.ERROR, f"Unexpected token after READLN: {self.tokens.actual}")
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                self.logger.log(LogTypes.ERROR, f"Unexpected token after READLN's left parenthesis: {self.tokens.actual}")
+
+            return Readln(self.tokens.actual)
 
         else:
             self.logger.log(LogTypes.ERROR, f"Unexpected token on block three: '{self.tokens.actual}'")

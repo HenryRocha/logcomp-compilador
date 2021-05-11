@@ -14,6 +14,7 @@ class TokenTypes(Enum):
     ASSIGN = 10
     SEPARATOR = 11
     PRINT = 12
+    READLN = 13
 
 
 class Token:

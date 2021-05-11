@@ -53,6 +53,10 @@ def test_valid(input_file: str, output_file: str, capsys) -> None:
         "./tests/fail09.c",
         "./tests/fail10.c",
         "./tests/fail11.c",
+        "./tests/fail12.c",
+        "./tests/fail13.c",
+        "./tests/fail14.c",
+        "./tests/fail15.c",
     ],
 )
 def test_invalid(input_file: str, capsys) -> None:
