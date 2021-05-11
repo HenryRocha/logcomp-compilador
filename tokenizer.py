@@ -83,6 +83,12 @@ class Tokenizer:
         elif c == ";":
             self.actual = Token(c, TokenTypes.SEPARATOR)
 
+        elif c == "{":
+            self.actual = Token(c, TokenTypes.LEFT_BRACKET)
+
+        elif c == "}":
+            self.actual = Token(c, TokenTypes.RIGHT_BRACKET)
+
         elif c.isalpha():
             wordBuilder = [char if (char.isalnum() or char == "_") else "@" for char in self.origin[self.position :]]
             wordBuilder = "".join(wordBuilder).split("@")[0]
@@ -92,6 +98,12 @@ class Tokenizer:
                 self.actual = Token(wordBuilder, TokenTypes.PRINT)
             elif wordBuilder == "readln":
                 self.actual = Token(wordBuilder, TokenTypes.READLN)
+            elif wordBuilder == "while":
+                self.actual = Token(wordBuilder, TokenTypes.WHILE)
+            elif wordBuilder == "if":
+                self.actual = Token(wordBuilder, TokenTypes.IF)
+            elif wordBuilder == "else":
+                self.actual = Token(wordBuilder, TokenTypes.ELSE)
             else:
                 self.actual = Token(wordBuilder, TokenTypes.IDENTIFIER)
 

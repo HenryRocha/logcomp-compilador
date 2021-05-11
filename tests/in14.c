@@ -1,2 +1,4 @@
-x = 1 > 0;
-println(x);
+{
+    x = 1 > 0;
+    println(x);
+}

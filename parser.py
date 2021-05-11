@@ -119,10 +119,17 @@ class Parser:
         self.logger.log(LogTypes.NORMAL, f"Started ParseBlock...")
 
         self.tokens.selectNext()
-        while self.tokens.actual.tokenType != TokenTypes.EOF:
+        if self.tokens.actual.tokenType != TokenTypes.LEFT_BRACKET:
+            self.logger.log(LogTypes.ERROR, f"Block cannot start with {self.tokens.actual}")
+
+        self.tokens.selectNext()
+        while self.tokens.actual.tokenType != TokenTypes.RIGHT_BRACKET:
             statement: Node = self.parseCommand()
             statement.evaluate(symbolTable=self.symbolTable, logger=self.logger)
             self.tokens.selectNext()
+
+        if self.tokens.actual.tokenType != TokenTypes.RIGHT_BRACKET:
+            self.logger.log(LogTypes.ERROR, f"Block cannot end with {self.tokens.actual}")
 
         self.logger.log(LogTypes.NORMAL, f"Ended ParseBlock...")
 
@@ -170,7 +177,7 @@ class Parser:
             ret = NoOp(value=self.tokens.actual.value)
 
         else:
-            self.logger.log(LogTypes.ERROR, f"Command does not start with IDENTIFIER or PRINT")
+            self.logger.log(LogTypes.ERROR, f"Command does not start with IDENTIFIER or PRINT: {self.tokens.actual}")
 
         self.logger.log(LogTypes.NORMAL, f"Ended ParseCommand...")
         return ret

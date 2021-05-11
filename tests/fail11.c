@@ -1,3 +1,5 @@
-x = 1;
-y = x + y;
-println(y);
+{
+    x = 1;
+    y = x + y;
+    println(y);
+}

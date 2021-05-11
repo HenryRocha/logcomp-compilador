@@ -21,6 +21,11 @@ class TokenTypes(Enum):
     CMP_AND = 17
     CMP_OR = 18
     NOT = 19
+    WHILE = 20
+    IF = 21
+    ELSE = 22
+    LEFT_BRACKET = 23
+    RIGHT_BRACKET = 24
 
 
 class Token:
