@@ -9,7 +9,7 @@ from symbolTable import SymbolTable
 class Parser:
     OPERATORS: [TokenTypes] = [TokenTypes.PLUS, TokenTypes.MINUS, TokenTypes.MULTIPLY, TokenTypes.DIVIDE]
     MARKERS: [TokenTypes] = [TokenTypes.LEFT_PARENTHESIS, TokenTypes.RIGHT_PARENTHESIS, TokenTypes.SEPARATOR]
-    CMPS: [TokenTypes] = [TokenTypes.CMP_EQUAL, TokenTypes.CMP_GREATER, TokenTypes.CMP_LESS]
+    CMPS: [TokenTypes] = [TokenTypes.CMP_EQUAL, TokenTypes.CMP_GREATER, TokenTypes.CMP_LESS, TokenTypes.CMP_AND, TokenTypes.CMP_OR]
     tokens: Tokenizer
     logger: Logger
     symbolTable: SymbolTable
@@ -73,8 +73,12 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {ret}")
             return ret
 
-        elif self.tokens.actual.tokenType == TokenTypes.PLUS or self.tokens.actual.tokenType == TokenTypes.MINUS:
-            self.logger.log(LogTypes.NORMAL, f"Consumed plus/minus {self.tokens.actual}")
+        elif (
+            self.tokens.actual.tokenType == TokenTypes.PLUS
+            or self.tokens.actual.tokenType == TokenTypes.MINUS
+            or self.tokens.actual.tokenType == TokenTypes.NOT
+        ):
+            self.logger.log(LogTypes.NORMAL, f"Consumed plus/minus/not {self.tokens.actual}")
             self.logger.log(LogTypes.NORMAL, "Started block three RECURSION...")
             ret: UnOp = UnOp(value=self.tokens.actual, left=self.blockThree())
             self.logger.log(LogTypes.NORMAL, "Ended block three RECURSION...")
@@ -117,7 +121,7 @@ class Parser:
         self.tokens.selectNext()
         while self.tokens.actual.tokenType != TokenTypes.EOF:
             statement: Node = self.parseCommand()
-            statement.evaluate(symbolTable=self.symbolTable)
+            statement.evaluate(symbolTable=self.symbolTable, logger=self.logger)
             self.tokens.selectNext()
 
         self.logger.log(LogTypes.NORMAL, f"Ended ParseBlock...")
@@ -136,7 +140,7 @@ class Parser:
                 self.logger.log(LogTypes.ERROR, f"Identifier is followed by '{self.tokens.actual}' instead of '='")
 
             self.logger.log(LogTypes.NORMAL, f"Calling ParseExpression to create the variable's AST...")
-            ret = Identifier(value=variableName, left=self.parseEqExpr())
+            ret = Identifier(value=variableName, left=self.parseOrExpr())
             self.logger.log(LogTypes.NORMAL, f"Ended call to ParseExpression...")
 
             if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
@@ -150,7 +154,7 @@ class Parser:
                 self.logger.log(LogTypes.ERROR, f"Println is followed by '{self.tokens.actual}' instead of '('")
 
             self.logger.log(LogTypes.NORMAL, f"Calling ParseExpression to create Println's AST...")
-            ret = Print(value=self.tokens.actual.value, left=self.parseEqExpr())
+            ret = Print(value=self.tokens.actual.value, left=self.parseOrExpr())
             self.logger.log(LogTypes.NORMAL, f"Ended call to ParseExpression...")
 
             if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
@@ -178,6 +182,46 @@ class Parser:
             result = self.blockOne(result)
 
         return result
+
+    def parseOrExpr(self) -> Node:
+        self.logger.log(LogTypes.NORMAL, f"Started ParseOrExpr...")
+
+        self.logger.log(LogTypes.NORMAL, "Calling ParseAndExpr...")
+        expr: Node = self.parseAndExpr()
+        self.logger.log(LogTypes.NORMAL, "Ended call to ParseAndExpr...")
+
+        if self.tokens.actual.tokenType == TokenTypes.CMP_OR:
+            self.logger.log(LogTypes.NORMAL, f"Consumed comparison: {self.tokens.actual}")
+            cmp = Comparison(self.tokens.actual, expr, self.parseExpression())
+
+            while self.tokens.actual.tokenType == TokenTypes.CMP_OR:
+                self.logger.log(LogTypes.NORMAL, f"Consumed another comparison: {self.tokens.actual}")
+                cmp = Comparison(self.tokens.actual, cmp, self.parseExpression())
+
+            return cmp
+        else:
+            self.logger.log(LogTypes.NORMAL, f"No comparison, returning expression: {expr}")
+            return expr
+
+    def parseAndExpr(self) -> Node:
+        self.logger.log(LogTypes.NORMAL, f"Started ParseAndExpr...")
+
+        self.logger.log(LogTypes.NORMAL, "Calling ParseEqExpr...")
+        expr: Node = self.parseEqExpr()
+        self.logger.log(LogTypes.NORMAL, "Ended call to ParseEqExpr...")
+
+        if self.tokens.actual.tokenType == TokenTypes.CMP_AND:
+            self.logger.log(LogTypes.NORMAL, f"Consumed comparison: {self.tokens.actual}")
+            cmp = Comparison(self.tokens.actual, expr, self.parseExpression())
+
+            while self.tokens.actual.tokenType == TokenTypes.CMP_AND:
+                self.logger.log(LogTypes.NORMAL, f"Consumed another comparison: {self.tokens.actual}")
+                cmp = Comparison(self.tokens.actual, cmp, self.parseExpression())
+
+            return cmp
+        else:
+            self.logger.log(LogTypes.NORMAL, f"No comparison, returning expression: {expr}")
+            return expr
 
     def parseEqExpr(self) -> Node:
         self.logger.log(LogTypes.NORMAL, f"Started ParseEqExpr...")

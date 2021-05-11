@@ -63,6 +63,23 @@ class Tokenizer:
         elif c == "<":
             self.actual = Token(c, TokenTypes.CMP_LESS)
 
+        elif c == "!":
+            self.actual = Token(c, TokenTypes.NOT)
+
+        elif c == "|":
+            if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "|":
+                self.position += 1
+                self.actual = Token("||", TokenTypes.CMP_OR)
+            else:
+                self.logger.log(LogTypes.ERROR, f"Comparison with only one '|' is not allowed")
+
+        elif c == "&":
+            if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "&":
+                self.position += 1
+                self.actual = Token("&&", TokenTypes.CMP_AND)
+            else:
+                self.logger.log(LogTypes.ERROR, f"Comparison with only one '&' is not allowed")
+
         elif c == ";":
             self.actual = Token(c, TokenTypes.SEPARATOR)
 

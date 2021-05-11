@@ -18,6 +18,9 @@ class TokenTypes(Enum):
     CMP_EQUAL = 14
     CMP_GREATER = 15
     CMP_LESS = 16
+    CMP_AND = 17
+    CMP_OR = 18
+    NOT = 19
 
 
 class Token:
