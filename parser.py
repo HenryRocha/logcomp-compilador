@@ -1,5 +1,5 @@
 from logger import Logger, LogTypes
-from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print, Readln, Comparison, If, Block, Variable
+from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print, Readln, Comparison, If, Block, Variable, While
 from preprocess import PreProcess
 from tokenizer import Tokenizer
 from tokens import Token, TokenTypes
@@ -184,7 +184,26 @@ class Parser:
             ret = NoOp(value=self.tokens.actual.value)
 
         elif self.tokens.actual.tokenType == TokenTypes.WHILE:
-            pass
+            self.logger.log(LogTypes.NORMAL, f"Consumed WHILE '{self.tokens.actual}'")
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.LEFT_PARENTHESIS:
+                self.logger.log(LogTypes.ERROR, f"Token WHILE is followed by '{self.tokens.actual}' instead of '('")
+
+            self.logger.log(LogTypes.NORMAL, f"Calling ParseOrExpr to create WHILE's condition...")
+            condition: Node = self.parseOrExpr()
+            self.logger.log(LogTypes.NORMAL, f"Finished creating WHILE's condition (ended call to ParseOrExpr)")
+
+            if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                self.logger.log(LogTypes.ERROR, f"Token WHILE condition is followed by '{self.tokens.actual}' instead of ')'")
+
+            self.logger.log(LogTypes.NORMAL, f"Consuming WHILE's command...")
+            self.tokens.selectNext()
+            command: Node = self.parseCommand()
+            self.logger.log(LogTypes.NORMAL, f"Finished consuming WHILE's command...")
+            self.logger.log(LogTypes.NORMAL, f"WHILE's command is: {type(command)}")
+
+            ret = While(Token("while", TokenTypes.WHILE), command, condition)
 
         elif self.tokens.actual.tokenType == TokenTypes.IF:
             self.logger.log(LogTypes.NORMAL, f"Consumed IF '{self.tokens.actual}'")

@@ -175,3 +175,13 @@ class If(Node):
         outputStr += f"\tIFFALSE: {self.children[1].value}"
         outputStr += f"\tCONDITION: {self.condition.value}"
         return outputStr
+
+
+class While(Node):
+    def __init__(self, value: Node, command: Node = None, condition: Node = None):
+        super().__init__(value=value, left=command)
+        self.condition = condition
+
+    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
+        while self.condition.evaluate(symbolTable=symbolTable, logger=logger):
+            self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
