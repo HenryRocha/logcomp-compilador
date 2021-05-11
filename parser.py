@@ -1,5 +1,5 @@
 from logger import Logger, LogTypes
-from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print, Readln, Comparison
+from node import Node, BinOp, UnOp, IntVal, NoOp, Identifier, Print, Readln, Comparison, If, Block, Variable
 from preprocess import PreProcess
 from tokenizer import Tokenizer
 from tokens import Token, TokenTypes
@@ -94,8 +94,8 @@ class Parser:
             return ret
 
         elif self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
-            self.logger.log(LogTypes.NORMAL, f"Consumed identifier {self.tokens.actual}")
-            ret: Node = self.symbolTable.getVar(self.tokens.actual.value)
+            self.logger.log(LogTypes.NORMAL, f"Consumed variable lookup {self.tokens.actual}")
+            ret: Node = Variable(self.tokens.actual)
             self.logger.log(LogTypes.NORMAL, f"Ended block three, result is: {ret}")
             return ret
 
@@ -115,23 +115,30 @@ class Parser:
         else:
             self.logger.log(LogTypes.ERROR, f"Unexpected token on block three: '{self.tokens.actual}'")
 
-    def parseBlock(self) -> None:
+    def parseBlock(self) -> Node:
         self.logger.log(LogTypes.NORMAL, f"Started ParseBlock...")
 
-        self.tokens.selectNext()
-        if self.tokens.actual.tokenType != TokenTypes.LEFT_BRACKET:
-            self.logger.log(LogTypes.ERROR, f"Block cannot start with {self.tokens.actual}")
+        if self.tokens.actual == None:
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.LEFT_BRACKET:
+                self.logger.log(LogTypes.ERROR, f"Block cannot start with {self.tokens.actual}")
+        elif self.tokens.actual.tokenType != TokenTypes.LEFT_BRACKET:
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.LEFT_BRACKET:
+                self.logger.log(LogTypes.ERROR, f"Block cannot start with {self.tokens.actual}")
 
+        ret: Node = Block()
         self.tokens.selectNext()
         while self.tokens.actual.tokenType != TokenTypes.RIGHT_BRACKET:
             statement: Node = self.parseCommand()
-            statement.evaluate(symbolTable=self.symbolTable, logger=self.logger)
+            ret.addNode(statement)
             self.tokens.selectNext()
 
         if self.tokens.actual.tokenType != TokenTypes.RIGHT_BRACKET:
             self.logger.log(LogTypes.ERROR, f"Block cannot end with {self.tokens.actual}")
 
         self.logger.log(LogTypes.NORMAL, f"Ended ParseBlock...")
+        return ret
 
     def parseCommand(self) -> Node:
         self.logger.log(LogTypes.NORMAL, f"Started ParseCommand...")
@@ -148,7 +155,7 @@ class Parser:
 
             self.logger.log(LogTypes.NORMAL, f"Calling ParseExpression to create the variable's AST...")
             ret = Identifier(value=variableName, left=self.parseOrExpr())
-            self.logger.log(LogTypes.NORMAL, f"Ended call to ParseExpression...")
+            self.logger.log(LogTypes.NORMAL, f"Finished creating variable's AST (ended call to ParseExpression)")
 
             if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
                 self.logger.log(LogTypes.ERROR, f"Assign expression is followed by '{self.tokens.actual}' instead of ';'")
@@ -175,6 +182,43 @@ class Parser:
             self.logger.log(LogTypes.NORMAL, f"Consumed separator '{self.tokens.actual}'")
 
             ret = NoOp(value=self.tokens.actual.value)
+
+        elif self.tokens.actual.tokenType == TokenTypes.WHILE:
+            pass
+
+        elif self.tokens.actual.tokenType == TokenTypes.IF:
+            self.logger.log(LogTypes.NORMAL, f"Consumed IF '{self.tokens.actual}'")
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.LEFT_PARENTHESIS:
+                self.logger.log(LogTypes.ERROR, f"Token IF is followed by '{self.tokens.actual}' instead of '('")
+
+            self.logger.log(LogTypes.NORMAL, f"Calling ParseOrExpr to create IF's condition...")
+            condition: Node = self.parseOrExpr()
+            self.logger.log(LogTypes.NORMAL, f"Ended call to ParseOrExpr...")
+
+            if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                self.logger.log(LogTypes.ERROR, f"Token IF condition is followed by '{self.tokens.actual}' instead of ')'")
+
+            self.logger.log(LogTypes.NORMAL, f"Consuming IF's command...")
+            self.tokens.selectNext()
+            command: Node = self.parseCommand()
+            self.logger.log(LogTypes.NORMAL, f"Finished consuming IF's command...")
+            self.logger.log(LogTypes.NORMAL, f"IF's command is: {type(command)}")
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType == TokenTypes.ELSE:
+                self.logger.log(LogTypes.NORMAL, f"IF contains ELSE...")
+                self.tokens.selectNext()
+                ret = If(value=Token("if", TokenTypes.IF), ifTrue=command, ifFalse=self.parseCommand(), condition=condition)
+            else:
+                self.logger.log(LogTypes.NORMAL, f"IF does not contain ELSE...")
+                ret = If(value=Token("if", TokenTypes.IF), ifTrue=command, condition=condition)
+
+        elif self.tokens.actual.tokenType == TokenTypes.LEFT_BRACKET:
+            self.logger.log(LogTypes.NORMAL, f"Consuming block in ParseCommand...")
+            ret = self.parseBlock()
+            self.logger.log(LogTypes.NORMAL, f"Finished consuming block in ParseCommand...")
 
         else:
             self.logger.log(LogTypes.ERROR, f"Command does not start with IDENTIFIER or PRINT: {self.tokens.actual}")
@@ -275,4 +319,4 @@ class Parser:
         filteredCode: str = preprocess.filter(code, self.logger)
 
         self.tokens = Tokenizer(filteredCode, self.logger)
-        self.parseBlock()
+        self.parseBlock().evaluate(symbolTable=self.symbolTable, logger=self.logger)

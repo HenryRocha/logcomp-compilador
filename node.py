@@ -91,7 +91,17 @@ class Identifier(Node):
         super().__init__(value=value, left=left)
 
     def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
-        symbolTable.setVar(self.value, self.children[0])
+        varValue = self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+        logger.log(LogTypes.NORMAL, f"Setting variable {self.value} = {varValue}")
+        symbolTable.setVar(var=self.value, value=varValue)
+
+
+class Variable(Node):
+    def __init__(self, value: Token):
+        super().__init__(value=value)
+
+    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+        return int(symbolTable.getVar(self.value.value))
 
 
 class Readln(Node):
@@ -131,3 +141,37 @@ class Comparison(Node):
 
         logger.log(LogTypes.NORMAL, f"Result: {result}")
         return result
+
+
+class Block(Node):
+    children: [Node]
+
+    def __init__(self):
+        self.children = []
+
+    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
+        for node in self.children:
+            logger.log(LogTypes.NORMAL, f"Running evaluate for {type(node)}")
+            node.evaluate(symbolTable=symbolTable, logger=logger)
+
+    def addNode(self, node: Node):
+        self.children.append(node)
+
+
+class If(Node):
+    def __init__(self, value: Node, ifTrue: Node = None, ifFalse: Node = None, condition: Node = None):
+        super().__init__(value=value, left=ifTrue, right=ifFalse)
+        self.condition = condition
+
+    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> bool:
+        if self.condition.evaluate(symbolTable=symbolTable, logger=logger):
+            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+        else:
+            return self.children[1].evaluate(symbolTable=symbolTable, logger=logger)
+
+    def __str__(self) -> str:
+        outputStr: str = f"NODE: {self.value}\n"
+        outputStr += f"\tIFTRUE: {self.children[0].value}"
+        outputStr += f"\tIFFALSE: {self.children[1].value}"
+        outputStr += f"\tCONDITION: {self.condition.value}"
+        return outputStr
