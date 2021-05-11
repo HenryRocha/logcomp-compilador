@@ -93,3 +93,31 @@ class Readln(Node):
             return int(inputStr)
         else:
             raise ValueError("Readln input must be an integer")
+
+
+class Comparison(Node):
+    def __init__(self, value: Node, left: Node, right: Node):
+        super().__init__(value=value, left=left, right=right)
+
+    def evaluate(self, symbolTable: SymbolTable) -> None:
+        # leftSide = self.children[0].evaluate(symbolTable)
+        # rightSide = self.children[1].evaluate(symbolTable)
+        # print(f"[LOG] Comparing {leftSide} {self.value.value} {rightSide}")
+
+        if self.value.tokenType == TokenTypes.CMP_EQUAL:
+            if self.children[0].evaluate(symbolTable) == self.children[1].evaluate(symbolTable):
+                return 1
+            else:
+                return 0
+        elif self.value.tokenType == TokenTypes.CMP_GREATER:
+            if self.children[0].evaluate(symbolTable) > self.children[1].evaluate(symbolTable):
+                return 1
+            else:
+                return 0
+        elif self.value.tokenType == TokenTypes.CMP_LESS:
+            if self.children[0].evaluate(symbolTable) < self.children[1].evaluate(symbolTable):
+                return 1
+            else:
+                return 0
+        else:
+            raise ValueError(f"Invalid comparison type: {self.value}")

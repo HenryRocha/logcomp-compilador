@@ -15,6 +15,9 @@ class TokenTypes(Enum):
     SEPARATOR = 11
     PRINT = 12
     READLN = 13
+    CMP_EQUAL = 14
+    CMP_GREATER = 15
+    CMP_LESS = 16
 
 
 class Token:

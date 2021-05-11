@@ -51,7 +51,17 @@ class Tokenizer:
             self.actual = Token(c, TokenTypes.RIGHT_PARENTHESIS)
 
         elif c == "=":
-            self.actual = Token(c, TokenTypes.ASSIGN)
+            if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "=":
+                self.position += 1
+                self.actual = Token("==", TokenTypes.CMP_EQUAL)
+            else:
+                self.actual = Token(c, TokenTypes.ASSIGN)
+
+        elif c == ">":
+            self.actual = Token(c, TokenTypes.CMP_GREATER)
+
+        elif c == "<":
+            self.actual = Token(c, TokenTypes.CMP_LESS)
 
         elif c == ";":
             self.actual = Token(c, TokenTypes.SEPARATOR)
