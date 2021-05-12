@@ -36,15 +36,26 @@ pipenv run pytest test.py
 A **EBNF** da versão atual só leva em consideração as operações de `+`, `-`, `*`, `/`, sem parênteses.
 
 ```
-BLOCK = { COMMAND } ;
-COMMAND = ( λ | ASSIGNMENT | PRINT), ";" ;
+BLOCK = "{", { COMMAND }, "}";
+COMMAND = ( λ | ASSIGNMENT | PRINT | IF | WHILE | BLOCK), ";" ;
+
 ASSIGNMENT = IDENTIFIER, "=", EXPRESSION ;
 PRINT = "println", "(", EXPRESSION, ")" ;
+WHILE = "while", "(", OREXPR, ")", COMMAND;
+IF = "if", "(", OREXPR, ")", COMMAND |
+     "if", "(", OREXPR, ")", COMMAND, "else", COMMAND;
+
+OREXPR = ANDEXPR, {"||", ANDEXPR};
+ANDEXPR = EQEXPR, {"&&", EQEXPR};
+EQEXPR = RELEXPR, {"==", RELEXPR};
+RELEXPR = EXPRESSION, {(">" | "<"), EXPRESSION};
 EXPRESSION = TERM, { ("+" | "-"), TERM } ;
 TERM = FACTOR, { ("*" | "/"), FACTOR } ;
 FACTOR = (("+" | "-"), FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER ;
+
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
 NUMBER = DIGIT, { DIGIT } ;
+
 LETTER = ( a | ... | z | A | ... | Z ) ;
 DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
 ```
