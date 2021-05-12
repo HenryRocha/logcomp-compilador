@@ -23,7 +23,7 @@ class Node(ABC):
         self.children[1] = newChild
 
     def __str__(self):
-        return f"{self.value}"
+        return f"Node type {type(self)} | Node value: {self.value}"
 
 
 class BinOp(Node):
@@ -164,17 +164,14 @@ class If(Node):
         self.condition = condition
 
     def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> bool:
-        if self.condition.evaluate(symbolTable=symbolTable, logger=logger):
-            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
-        else:
-            return self.children[1].evaluate(symbolTable=symbolTable, logger=logger)
+        conditionResult: bool = self.condition.evaluate(symbolTable=symbolTable, logger=logger)
 
-    def __str__(self) -> str:
-        outputStr: str = f"NODE: {self.value}\n"
-        outputStr += f"\tIFTRUE: {self.children[0].value}"
-        outputStr += f"\tIFFALSE: {self.children[1].value}"
-        outputStr += f"\tCONDITION: {self.condition.value}"
-        return outputStr
+        logger.log(LogTypes.NORMAL, f"Condition result: {conditionResult}")
+
+        if conditionResult:
+            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+        elif self.children[1] != None:
+            return self.children[1].evaluate(symbolTable=symbolTable, logger=logger)
 
 
 class While(Node):
