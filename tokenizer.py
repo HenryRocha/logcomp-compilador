@@ -51,10 +51,43 @@ class Tokenizer:
             self.actual = Token(c, TokenTypes.RIGHT_PARENTHESIS)
 
         elif c == "=":
-            self.actual = Token(c, TokenTypes.ASSIGN)
+            if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "=":
+                self.position += 1
+                self.actual = Token("==", TokenTypes.CMP_EQUAL)
+            else:
+                self.actual = Token(c, TokenTypes.ASSIGN)
+
+        elif c == ">":
+            self.actual = Token(c, TokenTypes.CMP_GREATER)
+
+        elif c == "<":
+            self.actual = Token(c, TokenTypes.CMP_LESS)
+
+        elif c == "!":
+            self.actual = Token(c, TokenTypes.NOT)
+
+        elif c == "|":
+            if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "|":
+                self.position += 1
+                self.actual = Token("||", TokenTypes.CMP_OR)
+            else:
+                self.logger.log(LogTypes.ERROR, f"Comparison with only one '|' is not allowed")
+
+        elif c == "&":
+            if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "&":
+                self.position += 1
+                self.actual = Token("&&", TokenTypes.CMP_AND)
+            else:
+                self.logger.log(LogTypes.ERROR, f"Comparison with only one '&' is not allowed")
 
         elif c == ";":
             self.actual = Token(c, TokenTypes.SEPARATOR)
+
+        elif c == "{":
+            self.actual = Token(c, TokenTypes.LEFT_BRACKET)
+
+        elif c == "}":
+            self.actual = Token(c, TokenTypes.RIGHT_BRACKET)
 
         elif c.isalpha():
             wordBuilder = [char if (char.isalnum() or char == "_") else "@" for char in self.origin[self.position :]]
@@ -63,6 +96,14 @@ class Tokenizer:
 
             if wordBuilder == "println":
                 self.actual = Token(wordBuilder, TokenTypes.PRINT)
+            elif wordBuilder == "readln":
+                self.actual = Token(wordBuilder, TokenTypes.READLN)
+            elif wordBuilder == "while":
+                self.actual = Token(wordBuilder, TokenTypes.WHILE)
+            elif wordBuilder == "if":
+                self.actual = Token(wordBuilder, TokenTypes.IF)
+            elif wordBuilder == "else":
+                self.actual = Token(wordBuilder, TokenTypes.ELSE)
             else:
                 self.actual = Token(wordBuilder, TokenTypes.IDENTIFIER)
 
