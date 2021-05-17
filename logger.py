@@ -1,27 +1,49 @@
 from enum import Enum
 
 
-class LogTypes(Enum):
-    ERROR = 1
-    NORMAL = 2
-    WARN = 3
+class CompilerError(Exception):
+    pass
 
 
 class Logger:
-    debug: bool
+    enable: bool
+    verbosity: int
 
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, enable: bool, verbosity: int) -> None:
+        self.enable = enable
+        self.verbosity = verbosity
 
-    def log(self, _type: LogTypes, msg: str):
-        if self.debug:
-            if _type == LogTypes.ERROR:
-                print(f"[ERROR] {msg}")
-                exit(0)
-            elif _type == LogTypes.NORMAL:
-                print(f"[LOG] {msg}")
-            elif _type == LogTypes.WARN:
-                print(f"[WARN] {msg}")
-        else:
-            if _type == LogTypes.ERROR:
-                raise ValueError(msg)
+    def configure(self, enable: bool, verbosity: int) -> None:
+        self.enable = enable
+        self.verbosity = verbosity
+
+    def critical(self, msg: str) -> None:
+        print(f"[CRITCAL] {msg}")
+        raise CompilerError(f"{msg}")
+
+    def error(self, msg: str) -> None:
+        print(f"[ERROR] {msg}")
+        raise CompilerError(f"{msg}")
+
+    def success(self, msg: str) -> None:
+        if self.enable and self.verbosity > 0:
+            print(f"[SUCCESS] {msg}")
+
+    def warn(self, msg: str) -> None:
+        if self.enable and self.verbosity > 0:
+            print(f"[WARNING] {msg}")
+
+    def info(self, msg: str) -> None:
+        if self.enable and self.verbosity > 1:
+            print(f"[INFO] {msg}")
+
+    def debug(self, msg: str) -> None:
+        if self.enable and self.verbosity > 2:
+            print(f"[DEBUG] {msg}")
+
+    def trace(self, msg: str) -> None:
+        if self.enable and self.verbosity > 3:
+            print(f"[TRACE] {msg}")
+
+
+logger = Logger(False, 1)

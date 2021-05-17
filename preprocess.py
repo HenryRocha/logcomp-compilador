@@ -1,24 +1,27 @@
 import re
-from logger import Logger, LogTypes
+
+from logger import logger
 
 
 class PreProcess:
-    COMMENT_START = "/*"
-    COMMENT_END = "*/"
+    COMMENT_START: str = "/*"
+    COMMENT_END: str = "*/"
     commentRegex: str = r"/\*.*?\*/"
     parenthesisRegex: str = r"\(.*?\)"
-    logger: Logger
 
-    def filter(self, code: str, logger: Logger) -> str:
+    def filter(self, code: str) -> str:
+        logger.info("[PreProccess] Started PREPROCCESS...")
+
         # Replace all comments with "".
+        logger.debug("[PreProccess] Removing comments...")
         filteredCode = re.sub(self.commentRegex, "", code)
 
         if self.COMMENT_START in filteredCode or self.COMMENT_END in filteredCode:
-            logger.log(LogTypes.ERROR, "Input contains invalid comments")
-        else:
-            logger.log(LogTypes.NORMAL, f"Pre processed input: {filteredCode}")
+            logger.critical("[PreProccess] Input contains invalid comments")
 
+        logger.debug("[PreProccess] Checking if the number of parenthesis is correct...")
         if filteredCode.count("(") != filteredCode.count(")"):
-            logger.log(LogTypes.ERROR, "Input contains invalid parenthesis")
+            logger.critical("[PreProccess] Input contains invalid parenthesis")
 
+        logger.info("[PreProccess] Ended PREPROCCESS...")
         return filteredCode

@@ -1,27 +1,28 @@
+from logger import logger
 from tokens import Token, TokenTypes
-from logger import Logger, LogTypes
 
 
 class Tokenizer:
     origin: str
     position: int
     actual: Token
-    logger: Logger
 
-    def __init__(self, code: str, logger: Logger):
+    def __init__(self, code: str) -> None:
         self.origin = code
         self.position = -1
         self.actual = None
-        self.logger = logger
 
-    def selectNext(self):
+    def selectNext(self) -> None:
+        """
+        Sets 'self.actual' to the next valid token.
+        """
         self.position += 1
 
         if not self.isPositionValid(self.position):
             self.actual = Token(None, TokenTypes.EOF)
             return
 
-        c = self.origin[self.position]
+        c: str = self.origin[self.position]
 
         while c == " " or c == "\n":
             self.position += 1
@@ -71,14 +72,14 @@ class Tokenizer:
                 self.position += 1
                 self.actual = Token("||", TokenTypes.CMP_OR)
             else:
-                self.logger.log(LogTypes.ERROR, f"Comparison with only one '|' is not allowed")
+                logger.critical(f"[Tokenizer] [SelectNext] Comparison with only one '|' is not allowed")
 
         elif c == "&":
             if self.isPositionValid(self.position + 1) and self.origin[self.position + 1] == "&":
                 self.position += 1
                 self.actual = Token("&&", TokenTypes.CMP_AND)
             else:
-                self.logger.log(LogTypes.ERROR, f"Comparison with only one '&' is not allowed")
+                logger.critical(f"[Tokenizer] [SelectNext] Comparison with only one '&' is not allowed")
 
         elif c == ";":
             self.actual = Token(c, TokenTypes.SEPARATOR)
@@ -115,7 +116,13 @@ class Tokenizer:
             self.actual = Token(numberBuilder, TokenTypes.NUMBER)
 
         else:
-            self.logger.log(LogTypes.ERROR, f"Unknown character '{c}'")
+            logger.critical(f"[Tokenizer] [SelectNext] Unknown character found: '{c}'")
 
-    def isPositionValid(self, position: int):
+        logger.trace(f"[Tokenizer] [SelectNext] Actual: {self.actual}")
+
+    def isPositionValid(self, position: int) -> bool:
+        """
+        Returns 'true' if the given position is less than the length
+        of origin.
+        """
         return position < len(self.origin)

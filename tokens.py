@@ -32,9 +32,9 @@ class Token:
     tokenType: TokenTypes
     value: str
 
-    def __init__(self, value: str, tokenType: TokenTypes):
+    def __init__(self, value: str, tokenType: TokenTypes) -> None:
         self.tokenType = tokenType
         self.value = value
 
-    def __str__(self):
-        return f"{self.tokenType} => {self.value}"
+    def __str__(self) -> str:
+        return f"TT({self.tokenType}): TV({self.value})"

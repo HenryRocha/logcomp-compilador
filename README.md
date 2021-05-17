@@ -1,5 +1,7 @@
 # Lógica da Computação - Compilador
 
+![svg](http://3.129.230.99/svg/HenryRocha/logcomp-compilador/)
+
 Projeto da matéria de Lógica da Computação.
 
 ## Como utilizar
@@ -10,9 +12,17 @@ Para utilizar o programa basta executar o seguinte comando:
 python3 main.py source.c
 ```
 
-Para rodar em modo `debug` basta executar o programa com a _flag_ `-d`:
+Para rodar em modo `debug` basta executar o programa com a _flag_ `-d` e `-vvvv` (o número de `v` controla a quantidade de informações geradas):
 ```bash
 python3 main.py -d source.c
+```
+
+```
+-d : CRITICAL & ERROR
+-d -v : CRITICAL & ERROR & WARN & SUCCESS
+-d -vv : CRITICAL & ERROR & WARN & SUCCESS & INFO
+-d -vvv : CRITICAL & ERROR & WARN & SUCCESS & INFO & DEBUG
+-d -vvvv : CRITICAL & ERROR & WARN & SUCCESS & INFO & DEBUG & TRACE
 ```
 
 ## Tests

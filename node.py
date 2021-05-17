@@ -1,14 +1,16 @@
 from abc import ABC, abstractmethod
-from tokens import Token, TokenTypes
+from typing import List
+
+from logger import logger
 from symbolTable import SymbolTable
-from logger import Logger, LogTypes
+from tokens import Token, TokenTypes
 
 
 class Node(ABC):
     value: Token
-    children: []
+    children: List
 
-    def __init__(self, value: Token, left: Token = None, right: Token = None):
+    def __init__(self, value: Token, left: Token = None, right: Token = None) -> None:
         self.value = value
         self.children = [left, right]
 
@@ -22,108 +24,118 @@ class Node(ABC):
     def setRightChild(self, newChild: Token) -> None:
         self.children[1] = newChild
 
-    def __str__(self):
-        return f"Node type {type(self)} | Node value: {self.value}"
+    def traverse(self, n, level=0):
+        if n == None or len(n.children) == 0:
+            return ""
+
+        tabs: str = "\t" * int(level) if int(level) > 0 else ""
+        if hasattr(n, "value"):
+            outStr: str = f"{tabs}NT({type(n)}): NV({n.value})\n"
+        else:
+            outStr: str = f"{tabs}NT({type(n)})\n"
+
+        if hasattr(n, "condition") and (type(n) == If or type(n) == While):
+            outStr += self.traverse(n.condition, int(level + 1))
+
+        for child in n.children:
+            outStr += self.traverse(child, int(level + 1))
+
+        return outStr
+
+    def __str__(self) -> str:
+        return self.traverse(self, 0)
 
 
 class BinOp(Node):
-    def __init__(self, value: Token, left: Token = None, right: Token = None):
+    def __init__(self, value: Token, left: Token = None, right: Token = None) -> None:
         super().__init__(value=value, left=left, right=right)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+    def evaluate(self, symbolTable: SymbolTable) -> int:
         if self.value.tokenType == TokenTypes.PLUS:
-            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger) + self.children[1].evaluate(
-                symbolTable=symbolTable, logger=logger
-            )
+            return self.children[0].evaluate(symbolTable=symbolTable) + self.children[1].evaluate(symbolTable=symbolTable)
         elif self.value.tokenType == TokenTypes.MINUS:
-            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger) - self.children[1].evaluate(
-                symbolTable=symbolTable, logger=logger
-            )
+            return self.children[0].evaluate(symbolTable=symbolTable) - self.children[1].evaluate(symbolTable=symbolTable)
         elif self.value.tokenType == TokenTypes.MULTIPLY:
-            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger) * self.children[1].evaluate(
-                symbolTable=symbolTable, logger=logger
-            )
+            return self.children[0].evaluate(symbolTable=symbolTable) * self.children[1].evaluate(symbolTable=symbolTable)
         elif self.value.tokenType == TokenTypes.DIVIDE:
-            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger) / self.children[1].evaluate(
-                symbolTable=symbolTable, logger=logger
-            )
+            return self.children[0].evaluate(symbolTable=symbolTable) / self.children[1].evaluate(symbolTable=symbolTable)
 
 
 class UnOp(Node):
-    def __init__(self, value: Token, left: Token):
+    def __init__(self, value: Token, left: Token) -> None:
         super().__init__(value=value, left=left)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+    def evaluate(self, symbolTable: SymbolTable) -> int:
         if self.value.tokenType == TokenTypes.PLUS:
-            return +self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+            return +self.children[0].evaluate(symbolTable=symbolTable)
         elif self.value.tokenType == TokenTypes.MINUS:
-            return -self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+            return -self.children[0].evaluate(symbolTable=symbolTable)
         elif self.value.tokenType == TokenTypes.NOT:
-            return not self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+            return not self.children[0].evaluate(symbolTable=symbolTable)
 
 
 class IntVal(Node):
-    def __init__(self, value: Token):
+    def __init__(self, value: Token) -> None:
         super().__init__(value=value)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+    def evaluate(self, symbolTable: SymbolTable) -> int:
         return int(self.value.value)
 
 
 class NoOp(Node):
-    def __init__(self, value: Token):
+    def __init__(self, value: Token) -> None:
         super().__init__(value=value)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+    def evaluate(self, symbolTable: SymbolTable) -> int:
         return 0
 
 
 class Print(Node):
-    def __init__(self, value: Token, left: Node):
+    def __init__(self, value: Token, left: Node) -> None:
         super().__init__(value=value, left=left)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
-        print(int(self.children[0].evaluate(symbolTable=symbolTable, logger=logger)))
+    def evaluate(self, symbolTable: SymbolTable) -> None:
+        print(int(self.children[0].evaluate(symbolTable=symbolTable)))
 
 
 class Identifier(Node):
-    def __init__(self, value: Token, left: Node):
+    def __init__(self, value: Token, left: Node) -> None:
         super().__init__(value=value, left=left)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
-        varValue = self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
-        logger.log(LogTypes.NORMAL, f"Setting variable {self.value} = {varValue}")
+    def evaluate(self, symbolTable: SymbolTable) -> None:
+        varValue = self.children[0].evaluate(symbolTable=symbolTable)
+        logger.debug(f"[Identifier] Setting variable {self.value} = {varValue}")
         symbolTable.setVar(var=self.value, value=varValue)
 
 
 class Variable(Node):
-    def __init__(self, value: Token):
+    def __init__(self, value: Token) -> None:
         super().__init__(value=value)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+    def evaluate(self, symbolTable: SymbolTable) -> int:
         return int(symbolTable.getVar(self.value.value))
 
 
 class Readln(Node):
-    def __init__(self, value: Token):
+    def __init__(self, value: Token) -> None:
         super().__init__(value=value)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> int:
+    def evaluate(self, symbolTable: SymbolTable) -> int:
         inputStr: str = str(input())
         if inputStr.isnumeric():
             return int(inputStr)
         else:
-            raise ValueError("Readln input must be an integer")
+            logger.critical(f"[Readln] Input must be an integer: {inputStr}")
 
 
 class Comparison(Node):
-    def __init__(self, value: Node, left: Node, right: Node):
+    def __init__(self, value: Node, left: Node, right: Node) -> None:
         super().__init__(value=value, left=left, right=right)
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> bool:
-        leftSide: int = int(self.children[0].evaluate(symbolTable=symbolTable, logger=logger))
-        rightSide: int = int(self.children[1].evaluate(symbolTable=symbolTable, logger=logger))
-        logger.log(LogTypes.NORMAL, f"[LOG] Comparing {leftSide} ({self.value}) {rightSide}")
+    def evaluate(self, symbolTable: SymbolTable) -> bool:
+        leftSide: int = int(self.children[0].evaluate(symbolTable=symbolTable))
+        rightSide: int = int(self.children[1].evaluate(symbolTable=symbolTable))
+        logger.debug(f"[Comparison] Comparing {leftSide} ({self.value}) {rightSide}")
 
         result: bool = False
         if self.value.tokenType == TokenTypes.CMP_EQUAL:
@@ -137,48 +149,48 @@ class Comparison(Node):
         elif self.value.tokenType == TokenTypes.CMP_OR:
             result = bool(leftSide) or bool(rightSide)
         else:
-            raise ValueError(f"Invalid comparison type: {self.value}")
+            logger.critical(f"[Comparison] Invalid comparison type: {self.value}")
 
-        logger.log(LogTypes.NORMAL, f"Result: {result}")
+        logger.debug(f"[Comparison] Result: {result}")
         return result
 
 
 class Block(Node):
-    children: [Node]
+    children: List[Node]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.children = []
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
+    def evaluate(self, symbolTable: SymbolTable) -> None:
         for node in self.children:
-            logger.log(LogTypes.NORMAL, f"Running evaluate for {type(node)}")
-            node.evaluate(symbolTable=symbolTable, logger=logger)
+            logger.debug(f"[Block] Running evaluate for {type(node)}")
+            node.evaluate(symbolTable=symbolTable)
 
-    def addNode(self, node: Node):
+    def addNode(self, node: Node) -> None:
         self.children.append(node)
 
 
 class If(Node):
-    def __init__(self, value: Node, ifTrue: Node = None, ifFalse: Node = None, condition: Node = None):
+    def __init__(self, value: Node, ifTrue: Node = None, ifFalse: Node = None, condition: Node = None) -> None:
         super().__init__(value=value, left=ifTrue, right=ifFalse)
         self.condition = condition
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> bool:
-        conditionResult: bool = self.condition.evaluate(symbolTable=symbolTable, logger=logger)
+    def evaluate(self, symbolTable: SymbolTable) -> bool:
+        conditionResult: bool = self.condition.evaluate(symbolTable=symbolTable)
 
-        logger.log(LogTypes.NORMAL, f"Condition result: {conditionResult}")
+        logger.debug(f"[If] Condition result: {conditionResult}")
 
         if conditionResult:
-            return self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+            return self.children[0].evaluate(symbolTable=symbolTable)
         elif self.children[1] != None:
-            return self.children[1].evaluate(symbolTable=symbolTable, logger=logger)
+            return self.children[1].evaluate(symbolTable=symbolTable)
 
 
 class While(Node):
-    def __init__(self, value: Node, command: Node = None, condition: Node = None):
+    def __init__(self, value: Node, command: Node = None, condition: Node = None) -> None:
         super().__init__(value=value, left=command)
         self.condition = condition
 
-    def evaluate(self, symbolTable: SymbolTable, logger: Logger) -> None:
-        while self.condition.evaluate(symbolTable=symbolTable, logger=logger):
-            self.children[0].evaluate(symbolTable=symbolTable, logger=logger)
+    def evaluate(self, symbolTable: SymbolTable) -> None:
+        while self.condition.evaluate(symbolTable=symbolTable):
+            self.children[0].evaluate(symbolTable=symbolTable)
