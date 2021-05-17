@@ -1,6 +1,6 @@
 {
-    x = 1;
-    y = x * 2 * 2;
-    z = y * y;
+    int x = 1;
+    int y = x * 2 * 2;
+    int z = y * y;
     println(z);
 }

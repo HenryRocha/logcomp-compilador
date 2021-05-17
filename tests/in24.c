@@ -1,12 +1,12 @@
 {
-    x = 8;
-    y = 9;
-    z = 10;
+    int x = 8;
+    int y = 9;
+    int z = 10;
 
-    test_bool_assign = z > y > x;
+    bool test_bool_assign = z > y > x;
     println(test_bool_assign);
 
-    w = 0;
+    int w = 0;
 
     while (x < (8 * 10))
     {

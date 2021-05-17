@@ -1,9 +1,9 @@
 {
-    x = 1;
+    int x = 1;
     println(x);
     x = 2;
     println(x);
-    y = 2;
-    z = x * y * 2;
+    int y = 2;
+    int z = x * y * 2;
     println(z);
 }

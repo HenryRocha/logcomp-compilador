@@ -1,8 +1,8 @@
 {
-    a1 = 1;
-    a2 = 2;
-    a_ = 3;
-    a1_ = 4;
+    int a1 = 1;
+    int a2 = 2;
+    int a_ = 3;
+    int a1_ = 4;
     println(a1);
     println(a2);
     println(a_);

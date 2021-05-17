@@ -1,4 +1,4 @@
 {
-    x = 1 1;
+    int x = 1 1;
     println(x);
 }

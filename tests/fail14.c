@@ -1,6 +1,5 @@
 {
-    x = 1;
-    y = readln()
-        z = x + y;
+    int x = 1;
+    int y = readln() int z = x + y;
     println(z);
 }
