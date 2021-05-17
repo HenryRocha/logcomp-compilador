@@ -1,4 +1,4 @@
 {
-    y = == 2;
+    bool y = == 2;
     println(y);
 }

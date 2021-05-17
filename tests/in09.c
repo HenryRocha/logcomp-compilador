@@ -1,8 +1,8 @@
 {
-    x1 = 8;
-    y2 = 5;
+    int x1 = 8;
+    int y2 = 5;
 
-    z_final = (x1 + y2) * ---37;
+    int z_final = (x1 + y2) * ---37;
     ;
     ;
     ;

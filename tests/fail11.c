@@ -1,5 +1,5 @@
 {
-    x = 1;
-    y = x + y;
+    int x = 1;
+    int y = x + y;
     println(y);
 }

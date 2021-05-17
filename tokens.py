@@ -1,5 +1,7 @@
 from enum import Enum
 
+from varTypes import VarTypes
+
 
 class TokenTypes(Enum):
     NUMBER = 1
@@ -26,15 +28,20 @@ class TokenTypes(Enum):
     ELSE = 22
     LEFT_BRACKET = 23
     RIGHT_BRACKET = 24
+    TYPE = 25
+    BOOL_VALUE = 26
+    STRING_VALUE = 27
 
 
 class Token:
     tokenType: TokenTypes
     value: str
+    varType: VarTypes
 
-    def __init__(self, value: str, tokenType: TokenTypes) -> None:
+    def __init__(self, value: str, tokenType: TokenTypes, varType: VarTypes = None) -> None:
         self.tokenType = tokenType
         self.value = value
+        self.varType = varType
 
     def __str__(self) -> str:
         return f"TT({self.tokenType}): TV({self.value})"

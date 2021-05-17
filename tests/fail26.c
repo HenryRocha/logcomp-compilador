@@ -1,4 +1,4 @@
 {
     int x = 1;
-println y);
+    x = 1 == 1;
 }

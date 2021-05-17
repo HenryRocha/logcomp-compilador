@@ -43,6 +43,9 @@ def capture(command: [str]):
         ("./tests/in25.c", "./tests/out25.txt"),
         ("./tests/in26.c", "./tests/out26.txt"),
         ("./tests/in27.c", "./tests/out27.txt"),
+        ("./tests/in28.c", "./tests/out28.txt"),
+        ("./tests/in29.c", "./tests/out29.txt"),
+        ("./tests/in30.c", "./tests/out30.txt"),
     ],
 )
 def test_valid(input_file: str, output_file: str, capsys) -> None:
@@ -84,6 +87,13 @@ def test_valid(input_file: str, output_file: str, capsys) -> None:
         "./tests/fail23.c",
         "./tests/fail24.c",
         "./tests/fail25.c",
+        "./tests/fail26.c",
+        "./tests/fail27.c",
+        "./tests/fail28.c",
+        "./tests/fail29.c",
+        "./tests/fail30.c",
+        "./tests/fail31.c",
+        "./tests/fail32.c",
     ],
 )
 def test_invalid(input_file: str, capsys) -> None:

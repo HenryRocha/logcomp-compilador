@@ -1,5 +1,5 @@
 {
-    x = 1 && 1;
+    bool x = 1 && 1;
     println(x);
     x = 1 && 0;
     println(x);
