@@ -1,5 +1,7 @@
 # Lógica da Computação - Compilador
 
+![svg](http://3.129.230.99/svg/HenryRocha/logcomp-compilador/)
+
 Projeto da matéria de Lógica da Computação.
 
 ## Como utilizar
