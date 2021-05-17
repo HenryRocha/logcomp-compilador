@@ -1,7 +1,9 @@
-import sys
 import argparse
+import pathlib
+import sys
 from parser import Parser
-from logger import Logger
+
+from logger import logger
 
 
 def main() -> None:
@@ -9,16 +11,22 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(dest="sourceFile", type=str, help="source code")
     parser.add_argument("-d", "--debug", action="store_true", help="run in debug mode", default=False)
+    parser.add_argument("-v", "--verbosity", action="count", help="verbosity level", default=0, required=False)
     args = parser.parse_args()
 
-    try:
-        with open(str(args.sourceFile).strip(), "r") as f:
+    sourceFile = pathlib.Path(args.sourceFile)
+    logger.configure(enable=bool(args.debug), verbosity=int(args.verbosity))
+
+    if not sourceFile.exists() or not sourceFile.is_file():
+        logger.critical(f"[Main] No file named '{args.sourceFile}'")
+    else:
+        logger.info("[Main] Reading source file...")
+        with open(sourceFile.absolute(), "r") as f:
             sourceCode = f.read()
-    except:
-        raise ValueError(f"No file named '{args.sourceFile}'")
+        logger.info("[Main] Done")
 
     # Parse and calculate the result.
-    Parser(Logger(args.debug)).run(sourceCode)
+    Parser().run(sourceCode)
 
 
 if __name__ == "__main__":
