@@ -1,5 +1,6 @@
 from logger import logger
 from tokens import Token, TokenTypes
+from varTypes import VarTypes
 
 
 class Tokenizer:
@@ -105,6 +106,12 @@ class Tokenizer:
                 self.actual = Token(wordBuilder, TokenTypes.IF)
             elif wordBuilder == "else":
                 self.actual = Token(wordBuilder, TokenTypes.ELSE)
+            elif wordBuilder == "int":
+                self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.INT)
+            elif wordBuilder == "bool":
+                self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.BOOL)
+            elif wordBuilder == "string":
+                self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.BOOL)
             else:
                 self.actual = Token(wordBuilder, TokenTypes.IDENTIFIER)
 

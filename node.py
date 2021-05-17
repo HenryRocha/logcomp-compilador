@@ -4,6 +4,7 @@ from typing import List
 from logger import logger
 from symbolTable import SymbolTable
 from tokens import Token, TokenTypes
+from varTypes import Var, VarTypes
 
 
 class Node(ABC):
@@ -51,14 +52,22 @@ class BinOp(Node):
         super().__init__(value=value, left=left, right=right)
 
     def evaluate(self, symbolTable: SymbolTable) -> int:
+        var1: Var = self.children[0].evaluate(symbolTable=symbolTable)
+        var2: Var = self.children[1].evaluate(symbolTable=symbolTable)
+
+        if var1.varType != var2.varType:
+            logger.critical(f"[BinOp] Variable types are different. {var1.varType} != {var2.varType}")
+
+        logger.debug(f"[BinOp] Adding {var1} + {var1}")
+
         if self.value.tokenType == TokenTypes.PLUS:
-            return self.children[0].evaluate(symbolTable=symbolTable) + self.children[1].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.INT, var1.value + var2.value)
         elif self.value.tokenType == TokenTypes.MINUS:
-            return self.children[0].evaluate(symbolTable=symbolTable) - self.children[1].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.INT, var1.value - var2.value)
         elif self.value.tokenType == TokenTypes.MULTIPLY:
-            return self.children[0].evaluate(symbolTable=symbolTable) * self.children[1].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.INT, var1.value * var2.value)
         elif self.value.tokenType == TokenTypes.DIVIDE:
-            return self.children[0].evaluate(symbolTable=symbolTable) / self.children[1].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.INT, var1.value // var2.value)
 
 
 class UnOp(Node):
@@ -66,12 +75,14 @@ class UnOp(Node):
         super().__init__(value=value, left=left)
 
     def evaluate(self, symbolTable: SymbolTable) -> int:
+        var: Var = self.children[0].evaluate(symbolTable=symbolTable)
+
         if self.value.tokenType == TokenTypes.PLUS:
-            return +self.children[0].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.INT, +var.value)
         elif self.value.tokenType == TokenTypes.MINUS:
-            return -self.children[0].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.INT, -var.value)
         elif self.value.tokenType == TokenTypes.NOT:
-            return not self.children[0].evaluate(symbolTable=symbolTable)
+            return Var(VarTypes.BOOL, not bool(var.value))
 
 
 class IntVal(Node):
@@ -79,7 +90,7 @@ class IntVal(Node):
         super().__init__(value=value)
 
     def evaluate(self, symbolTable: SymbolTable) -> int:
-        return int(self.value.value)
+        return Var(VarTypes.INT, int(self.value.value))
 
 
 class NoOp(Node):
@@ -87,7 +98,7 @@ class NoOp(Node):
         super().__init__(value=value)
 
     def evaluate(self, symbolTable: SymbolTable) -> int:
-        return 0
+        return Var(VarTypes.INT, 0)
 
 
 class Print(Node):
@@ -95,17 +106,35 @@ class Print(Node):
         super().__init__(value=value, left=left)
 
     def evaluate(self, symbolTable: SymbolTable) -> None:
-        print(int(self.children[0].evaluate(symbolTable=symbolTable)))
+        print(self.children[0].evaluate(symbolTable=symbolTable).value)
 
 
 class Identifier(Node):
-    def __init__(self, value: Token, left: Node) -> None:
+    def __init__(self, value: Token, left: Node, varType: VarTypes = None) -> None:
         super().__init__(value=value, left=left)
+        self.varType = varType
 
     def evaluate(self, symbolTable: SymbolTable) -> None:
-        varValue = self.children[0].evaluate(symbolTable=symbolTable)
-        logger.debug(f"[Identifier] Setting variable {self.value} = {varValue}")
-        symbolTable.setVar(var=self.value, value=varValue)
+        if not symbolTable.declared(self.value):
+            if self.varType == None:
+                logger.critical(f"[Identifier] Missing type on declaration for variable '{self.value}'")
+
+            var: Var = self.children[0].evaluate(symbolTable=symbolTable)
+            logger.debug(f"[Identifier] Setting variable ({self.varType}) {self.value} = {var.value}")
+            symbolTable.setVar(var=self.value, varType=self.varType, value=var.value)
+        else:
+            if self.varType != None:
+                logger.critical(f"[Identifier] Variable '{self.value}' already declared. Type: {self.varType}")
+
+            var: Var = self.children[0].evaluate(symbolTable=symbolTable)
+            existingVar: Var = symbolTable.getVar(var=self.value)
+            if existingVar.varType != var.varType:
+                logger.critical(
+                    f"[Identifier] Variable reassign with mismatching types. '{self.value}' has type {existingVar.varType} but was reassigned to {var.varType}"
+                )
+
+            logger.debug(f"[Identifier] Setting variable ({var.varType}) {self.value} = {var.value}")
+            symbolTable.setVar(var=self.value, varType=var.varType, value=var.value)
 
 
 class Variable(Node):
@@ -113,7 +142,7 @@ class Variable(Node):
         super().__init__(value=value)
 
     def evaluate(self, symbolTable: SymbolTable) -> int:
-        return int(symbolTable.getVar(self.value.value))
+        return symbolTable.getVar(self.value.value)
 
 
 class Readln(Node):
@@ -123,7 +152,7 @@ class Readln(Node):
     def evaluate(self, symbolTable: SymbolTable) -> int:
         inputStr: str = str(input())
         if inputStr.isnumeric():
-            return int(inputStr)
+            return Var(VarTypes.INT, int(inputStr))
         else:
             logger.critical(f"[Readln] Input must be an integer: {inputStr}")
 
@@ -133,26 +162,26 @@ class Comparison(Node):
         super().__init__(value=value, left=left, right=right)
 
     def evaluate(self, symbolTable: SymbolTable) -> bool:
-        leftSide: int = int(self.children[0].evaluate(symbolTable=symbolTable))
-        rightSide: int = int(self.children[1].evaluate(symbolTable=symbolTable))
+        leftSide: Var = self.children[0].evaluate(symbolTable=symbolTable)
+        rightSide: Var = self.children[1].evaluate(symbolTable=symbolTable)
         logger.debug(f"[Comparison] Comparing {leftSide} ({self.value}) {rightSide}")
 
         result: bool = False
         if self.value.tokenType == TokenTypes.CMP_EQUAL:
-            result = leftSide == rightSide
+            result = bool(leftSide.value == rightSide.value)
         elif self.value.tokenType == TokenTypes.CMP_GREATER:
-            result = leftSide > rightSide
+            result = bool(leftSide.value > rightSide.value)
         elif self.value.tokenType == TokenTypes.CMP_LESS:
-            result = leftSide < rightSide
+            result = bool(leftSide.value < rightSide.value)
         elif self.value.tokenType == TokenTypes.CMP_AND:
-            result = bool(leftSide) and bool(rightSide)
+            result = bool(leftSide.value) and bool(rightSide.value)
         elif self.value.tokenType == TokenTypes.CMP_OR:
-            result = bool(leftSide) or bool(rightSide)
+            result = bool(leftSide.value) or bool(rightSide.value)
         else:
             logger.critical(f"[Comparison] Invalid comparison type: {self.value}")
 
         logger.debug(f"[Comparison] Result: {result}")
-        return result
+        return Var(VarTypes.BOOL, result)
 
 
 class Block(Node):
@@ -180,7 +209,7 @@ class If(Node):
 
         logger.debug(f"[If] Condition result: {conditionResult}")
 
-        if conditionResult:
+        if conditionResult.value:
             return self.children[0].evaluate(symbolTable=symbolTable)
         elif self.children[1] != None:
             return self.children[1].evaluate(symbolTable=symbolTable)
@@ -192,5 +221,19 @@ class While(Node):
         self.condition = condition
 
     def evaluate(self, symbolTable: SymbolTable) -> None:
-        while self.condition.evaluate(symbolTable=symbolTable):
+        while self.condition.evaluate(symbolTable=symbolTable).value:
             self.children[0].evaluate(symbolTable=symbolTable)
+
+
+class BoolVal(Node):
+    def __init__(self, value: Token) -> None:
+        if value in ["true", "false"]:
+            super().__init__(value=value)
+        else:
+            logger.critical(f"[BoolVal] Value is not 'true'/'false': {value}")
+
+    def evaluate(self, symbolTable: SymbolTable) -> bool:
+        if self.value == "true":
+            return Var(VarTypes.BOOL, True)
+        else:
+            return Var(VarTypes.BOOL, False)

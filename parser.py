@@ -1,4 +1,5 @@
 from typing import List
+from varTypes import VarTypes
 
 from logger import logger
 from node import BinOp, Block, Comparison, Identifier, If, IntVal, Node, NoOp, Print, Readln, UnOp, Variable, While
@@ -41,7 +42,29 @@ class Parser:
 
         ret: Node = NoOp(Token("", TokenTypes.EOF))
 
-        if self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
+        if self.tokens.actual.tokenType == TokenTypes.TYPE:
+            logger.debug(f"[ParseCommand] Consumed TYPE '{self.tokens.actual}'")
+
+            varType: VarTypes = self.tokens.actual.varType
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.IDENTIFIER:
+                logger.critical(f"[ParseCommand] TYPE is followed by '{self.tokens.actual}' instead of IDENTIFIER")
+
+            variableName: str = self.tokens.actual.value
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.ASSIGN:
+                logger.critical(f"[ParseCommand] IDENTIFIER is followed by '{self.tokens.actual}' instead of '='")
+
+            logger.trace(f"[ParseCommand] Creating IDENTIFIER's AST...")
+            ret = Identifier(value=variableName, varType=varType, left=self.parseOrExpr())
+            logger.trace(f"[ParseCommand] Finished creating IDENTIFIER's AST...")
+
+            if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
+                logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
+
+        elif self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
             logger.debug(f"[ParseCommand] Consumed IDENTIFIER '{self.tokens.actual}'")
             variableName: str = self.tokens.actual.value
 
