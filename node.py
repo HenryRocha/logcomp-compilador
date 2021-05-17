@@ -227,13 +227,13 @@ class While(Node):
 
 class BoolVal(Node):
     def __init__(self, value: Token) -> None:
-        if value in ["true", "false"]:
+        if value.value in ["true", "false"]:
             super().__init__(value=value)
         else:
             logger.critical(f"[BoolVal] Value is not 'true'/'false': {value}")
 
     def evaluate(self, symbolTable: SymbolTable) -> bool:
-        if self.value == "true":
+        if self.value.value == "true":
             return Var(VarTypes.BOOL, True)
         else:
             return Var(VarTypes.BOOL, False)
