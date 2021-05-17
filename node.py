@@ -55,7 +55,9 @@ class BinOp(Node):
         var1: Var = self.children[0].evaluate(symbolTable=symbolTable)
         var2: Var = self.children[1].evaluate(symbolTable=symbolTable)
 
-        if var1.varType != var2.varType:
+        if (var1.varType in [VarTypes.INT, VarTypes.BOOL] and var2.varType == VarTypes.STRING) or (
+            var1.varType == VarTypes.STRING and var2.varType in [VarTypes.INT, VarTypes.BOOL]
+        ):
             logger.critical(f"[BinOp] Variable types are different. {var1.varType} != {var2.varType}")
 
         logger.debug(f"[BinOp] Adding {var1} + {var1}")
@@ -166,6 +168,11 @@ class Comparison(Node):
         rightSide: Var = self.children[1].evaluate(symbolTable=symbolTable)
         logger.debug(f"[Comparison] Comparing {leftSide} ({self.value}) {rightSide}")
 
+        if (leftSide.varType in [VarTypes.INT, VarTypes.BOOL] and rightSide.varType == VarTypes.STRING) or (
+            leftSide.varType == VarTypes.STRING and rightSide.varType in [VarTypes.INT, VarTypes.BOOL]
+        ):
+            logger.critical(f"[BinOp] Variable types are different. {leftSide.varType} != {rightSide.varType}")
+
         result: bool = False
         if self.value.tokenType == TokenTypes.CMP_EQUAL:
             result = bool(leftSide.value == rightSide.value)
@@ -237,3 +244,11 @@ class BoolVal(Node):
             return Var(VarTypes.BOOL, True)
         else:
             return Var(VarTypes.BOOL, False)
+
+
+class StringVal(Node):
+    def __init__(self, value: Token) -> None:
+        super().__init__(value=value)
+
+    def evaluate(self, symbolTable: SymbolTable) -> str:
+        return Var(VarTypes.STRING, self.value.value)

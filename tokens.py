@@ -30,6 +30,7 @@ class TokenTypes(Enum):
     RIGHT_BRACKET = 24
     TYPE = 25
     BOOL_VALUE = 26
+    STRING_VALUE = 27
 
 
 class Token:

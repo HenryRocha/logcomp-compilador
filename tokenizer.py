@@ -91,6 +91,14 @@ class Tokenizer:
         elif c == "}":
             self.actual = Token(c, TokenTypes.RIGHT_BRACKET)
 
+        elif c == '"':
+            wordBuilder = [char if (char != '"') else '"' for char in self.origin[self.position + 1 :]]
+            wordBuilder = "".join(wordBuilder).split('"')[0]
+            self.position += len(wordBuilder)
+            self.position += 1
+
+            self.actual = Token(wordBuilder, TokenTypes.STRING_VALUE)
+
         elif c.isalpha():
             wordBuilder = [char if (char.isalnum() or char == "_") else "@" for char in self.origin[self.position :]]
             wordBuilder = "".join(wordBuilder).split("@")[0]

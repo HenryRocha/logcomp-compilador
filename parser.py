@@ -1,12 +1,12 @@
 from typing import List
-from varTypes import VarTypes
 
 from logger import logger
-from node import BinOp, Block, Comparison, Identifier, If, IntVal, Node, NoOp, Print, Readln, UnOp, Variable, While, BoolVal
+from node import BinOp, Block, BoolVal, Comparison, Identifier, If, IntVal, Node, NoOp, Print, Readln, StringVal, UnOp, Variable, While
 from preprocess import PreProcess
 from symbolTable import SymbolTable
 from tokenizer import Tokenizer
 from tokens import Token, TokenTypes
+from varTypes import VarTypes
 
 
 class Parser:
@@ -279,6 +279,10 @@ class Parser:
         elif self.tokens.actual.tokenType == TokenTypes.BOOL_VALUE:
             logger.debug(f"[ParseFactor] Consumed BOOL_VALUE: {self.tokens.actual}")
             ret = BoolVal(value=self.tokens.actual)
+
+        elif self.tokens.actual.tokenType == TokenTypes.STRING_VALUE:
+            logger.debug(f"[ParseFactor] Consumed STRING_VALUE: {self.tokens.actual}")
+            ret = StringVal(value=self.tokens.actual)
 
         elif (
             self.tokens.actual.tokenType == TokenTypes.PLUS
