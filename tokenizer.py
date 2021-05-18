@@ -119,7 +119,7 @@ class Tokenizer:
             elif wordBuilder == "bool":
                 self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.BOOL)
             elif wordBuilder == "string":
-                self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.BOOL)
+                self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.STRING)
             elif wordBuilder in ["true", "false"]:
                 self.actual = Token(wordBuilder, TokenTypes.BOOL_VALUE)
             else:

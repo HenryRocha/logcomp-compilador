@@ -130,13 +130,21 @@ class Identifier(Node):
 
             var: Var = self.children[0].evaluate(symbolTable=symbolTable)
             existingVar: Var = symbolTable.getVar(var=self.value)
-            if existingVar.varType != var.varType:
+            if (existingVar.varType in [VarTypes.INT, VarTypes.BOOL] and var.varType == VarTypes.STRING) or (
+                existingVar.varType == VarTypes.STRING and var.varType in [VarTypes.INT, VarTypes.BOOL]
+            ):
                 logger.critical(
                     f"[Identifier] Variable reassign with mismatching types. '{self.value}' has type {existingVar.varType} but was reassigned to {var.varType}"
                 )
 
             logger.debug(f"[Identifier] Setting variable ({var.varType}) {self.value} = {var.value}")
-            symbolTable.setVar(var=self.value, varType=var.varType, value=var.value)
+
+            if existingVar.varType == VarTypes.INT:
+                symbolTable.setVar(var=self.value, varType=var.varType, value=int(var.value))
+            elif existingVar.varType == VarTypes.BOOL:
+                symbolTable.setVar(var=self.value, varType=var.varType, value=bool(var.value))
+            elif existingVar.varType == VarTypes.STRING:
+                symbolTable.setVar(var=self.value, varType=var.varType, value=str(var.value))
 
 
 class Variable(Node):
