@@ -220,11 +220,14 @@ class If(Node):
         self.condition = condition
 
     def evaluate(self, symbolTable: SymbolTable) -> bool:
-        conditionResult: bool = self.condition.evaluate(symbolTable=symbolTable)
+        conditionResult: Var = self.condition.evaluate(symbolTable=symbolTable)
 
         logger.debug(f"[If] Condition result: {conditionResult}")
 
-        if conditionResult.value:
+        if conditionResult.varType == VarTypes.STRING:
+            logger.critical(f"[If] Condition cannot be a STRING: {conditionResult}")
+
+        if bool(conditionResult.value):
             return self.children[0].evaluate(symbolTable=symbolTable)
         elif self.children[1] != None:
             return self.children[1].evaluate(symbolTable=symbolTable)

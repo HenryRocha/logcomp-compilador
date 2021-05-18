@@ -25,7 +25,7 @@ class Tokenizer:
 
         c: str = self.origin[self.position]
 
-        while c == " " or c == "\n":
+        while c == " " or c == "\n" or c == "\t":
             self.position += 1
 
             if not self.isPositionValid(self.position):
