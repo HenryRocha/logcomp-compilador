@@ -54,15 +54,22 @@ class Parser:
             variableName: str = self.tokens.actual.value
 
             self.tokens.selectNext()
-            if self.tokens.actual.tokenType != TokenTypes.ASSIGN:
-                logger.critical(f"[ParseCommand] IDENTIFIER is followed by '{self.tokens.actual}' instead of '='")
+            if self.tokens.actual.tokenType == TokenTypes.ASSIGN:
+                logger.debug(f"[ParseCommand] IDENTIFIER is assigned on declaration")
 
-            logger.trace(f"[ParseCommand] Creating IDENTIFIER's AST...")
-            ret = Identifier(value=variableName, varType=varType, left=self.parseOrExpr())
-            logger.trace(f"[ParseCommand] Finished creating IDENTIFIER's AST...")
+                logger.trace(f"[ParseCommand] Creating IDENTIFIER's AST...")
+                ret = Identifier(value=variableName, varType=varType, left=self.parseOrExpr())
+                logger.trace(f"[ParseCommand] Finished creating IDENTIFIER's AST...")
 
-            if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
-                logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
+                if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
+                    logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
+
+            else:
+                logger.debug(f"[ParseCommand] IDENTIFIER is not assigned on declaration")
+                ret = Identifier(value=variableName, varType=varType, left=NoOp(Token("", TokenTypes.EOF)))
+
+                if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
+                    logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
 
         elif self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
             logger.debug(f"[ParseCommand] Consumed IDENTIFIER '{self.tokens.actual}'")
