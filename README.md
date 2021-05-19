@@ -43,12 +43,12 @@ pipenv run pytest test.py
 
 ## EBNF
 
-A **EBNF** da versão atual só leva em consideração as operações de `+`, `-`, `*`, `/`, sem parênteses.
-
 ```
 BLOCK = "{", { COMMAND }, "}";
-COMMAND = ( λ | ASSIGNMENT | PRINT | IF | WHILE | BLOCK), ";" ;
+COMMAND = ( λ | VARIABLE_DECLARATION | ASSIGNMENT | PRINT | IF | WHILE | BLOCK), ";" ;
 
+VARIABLE_DECLARATION = ( TYPE, " ", IDENTIFIER, "=", EXPRESSION ) |
+                       ( TYPE, " ", IDENTIFIER );
 ASSIGNMENT = IDENTIFIER, "=", EXPRESSION ;
 PRINT = "println", "(", EXPRESSION, ")" ;
 WHILE = "while", "(", OREXPR, ")", COMMAND;
@@ -61,10 +61,17 @@ EQEXPR = RELEXPR, {"==", RELEXPR};
 RELEXPR = EXPRESSION, {(">" | "<"), EXPRESSION};
 EXPRESSION = TERM, { ("+" | "-"), TERM } ;
 TERM = FACTOR, { ("*" | "/"), FACTOR } ;
-FACTOR = (("+" | "-"), FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER ;
+FACTOR = (("+" | "-"), FACTOR) | NUMBER | BOOL_VALUE | STRING_VALUE | "(", EXPRESSION, ")" | IDENTIFIER ;
+
+TYPE = INT | BOOL | STRING;
+INT = "int";
+BOOL = "bool";
+STRING = "string";
 
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
 NUMBER = DIGIT, { DIGIT } ;
+BOOL_VALUE = "true" | "false" ;
+STRING_VALUE = '"', ( LETTER | NUMBER ), {( LETTER | NUMBER )}, '"';
 
 LETTER = ( a | ... | z | A | ... | Z ) ;
 DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
