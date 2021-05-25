@@ -1,8 +1,8 @@
-True
-False
-False
-True
-True
-False
-True
-False
+1
+0
+0
+1
+1
+0
+1
+0

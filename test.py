@@ -1,9 +1,11 @@
-import sys
-import pytest
 import subprocess
+import sys
+from typing import List
+
+import pytest
 
 
-def capture(command: [str]):
+def capture(command: List[str]):
     proc = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -57,11 +59,19 @@ def capture(command: [str]):
     ],
 )
 def test_valid(input_file: str, output_file: str, capsys) -> None:
-    command = ["python3", "./main.py", f"{input_file}"]
+    command = ["python3", "./main.py", f"{input_file}", "-o", "out.asm"]
     out, err, exitcode = capture(command)
+
+    assert exitcode == 0
 
     with open(output_file, "r") as f:
         expectedOutput = f.read()
+
+    command = ["make", 'ARGS="out"']
+    out, err, exitcode = capture(command)
+
+    command = ["./out"]
+    out, err, exitcode = capture(command)
 
     assert exitcode == 0
     assert out.decode("UTF-8") == expectedOutput

@@ -3,6 +3,7 @@ import pathlib
 import sys
 from parser import Parser
 
+from assembly import assembly
 from logger import logger
 
 
@@ -10,6 +11,7 @@ def main() -> None:
     # Argparse, to enalbe the debug flag.
     parser = argparse.ArgumentParser()
     parser.add_argument(dest="sourceFile", type=str, help="source code")
+    parser.add_argument("-o", "--output", type=str, help="output file", default=False)
     parser.add_argument("-d", "--debug", action="store_true", help="run in debug mode", default=False)
     parser.add_argument("-v", "--verbosity", action="count", help="verbosity level", default=0, required=False)
     args = parser.parse_args()
@@ -25,8 +27,14 @@ def main() -> None:
             sourceCode = f.read()
         logger.info("[Main] Done")
 
+    if args.output:
+        outputFile = pathlib.Path(args.output)
+        assembly.configure(outputFile.absolute())
+
     # Parse and calculate the result.
     Parser().run(sourceCode)
+
+    assembly.writeToFile()
 
 
 if __name__ == "__main__":
