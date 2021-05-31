@@ -4,13 +4,18 @@ from typing import List
 
 class Assembly:
     insts: List[str] = []
+    debug: bool = False
 
-    def configure(self, filePath: str) -> None:
+    def configure(self, filePath: str, debug: bool = False) -> None:
         self.filePath = filePath
+        self.debug = debug
 
     def writeInstruction(self, inst: str) -> None:
         logger.debug(f"[Assembly] {inst}")
         self.insts.append(f"\t{inst}\n")
+
+        if not self.debug:
+            print(inst.replace("\n", ""))
 
     def writeComment(self, msg: str) -> None:
         logger.debug(f"[Assembly] ; {msg}")

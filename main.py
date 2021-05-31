@@ -29,12 +29,13 @@ def main() -> None:
 
     if args.output:
         outputFile = pathlib.Path(args.output)
-        assembly.configure(outputFile.absolute())
+        assembly.configure(outputFile.absolute(), debug=args.debug)
 
     # Parse and calculate the result.
     Parser().run(sourceCode)
 
-    assembly.writeToFile()
+    if args.output:
+        assembly.writeToFile()
 
 
 if __name__ == "__main__":
