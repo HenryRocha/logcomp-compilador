@@ -366,9 +366,10 @@ class FuncCall(Node):
             logger.critical(f"[FuncCall] Number of parameters mismatch, function has {len(func.varDec)} parameters but {len(argResults)} were given")
 
         for statement in func.statements:
+            logger.debug(f"[FuncCall] Running evaluate for {type(statement)}")
             ret = statement.evaluate(symbolTable=func.symbolTable, funcTable=funcTable)
 
-            if ret != None:
+            if ret != None and type(statement) != NoOp and type(statement) != FuncCall:
                 logger.trace(f"[FuncCall] Call return: {ret}")
 
                 if ret.varType == func.retType:
