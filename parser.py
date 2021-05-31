@@ -80,6 +80,9 @@ class Parser:
                 logger.debug(f"[ParseFuncDefBlock] Found function declaration PARAM_SEPARATOR")
                 self.tokens.selectNext()
 
+                if self.tokens.actual.tokenType == TokenTypes.RIGHT_PARENTHESIS:
+                    logger.critical(f"[ParseBlock] Function declaration parameter separator must be followed by another parameter, not by {self.tokens.actual}")
+
         logger.debug(f"[ParseFuncDefBlock] Finished consuming function parameters")
 
         self.tokens.selectNext()
