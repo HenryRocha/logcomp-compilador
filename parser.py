@@ -1,12 +1,33 @@
 from typing import List
 
+from funcTable import FuncTable
 from logger import logger
-from node import BinOp, Block, BoolVal, Comparison, Identifier, If, IntVal, Node, NoOp, Print, Readln, StringVal, UnOp, Variable, While
+from node import (
+    BinOp,
+    Block,
+    BoolVal,
+    Comparison,
+    FuncArg,
+    FuncCall,
+    FuncDec,
+    Identifier,
+    If,
+    IntVal,
+    Node,
+    NoOp,
+    Print,
+    Readln,
+    Return,
+    StringVal,
+    UnOp,
+    Variable,
+    While,
+)
 from preprocess import PreProcess
 from symbolTable import SymbolTable
 from tokenizer import Tokenizer
 from tokens import Token, TokenTypes
-from varTypes import VarTypes
+from varTypes import Var, VarTypes
 
 
 class Parser:
@@ -18,7 +39,55 @@ class Parser:
     result: int
 
     def __init__(self) -> None:
-        self.symbolTable = SymbolTable()
+        self.funcTable = FuncTable()
+
+    def parseFuncDefBlock(self) -> Node:
+        logger.info(f"[ParseFuncDefBlock] Start...")
+
+        logger.debug(f"[ParseFuncDefBlock] Consumed TYPE '{self.tokens.actual}'")
+        if self.tokens.actual.tokenType != TokenTypes.TYPE:
+            logger.critical(f"[ParseBlock] Function declaration cannot start with {self.tokens.actual}")
+
+        self.tokens.selectNext()
+        logger.debug(f"[ParseFuncDefBlock] Consumed IDENTIFIER '{self.tokens.actual}'")
+        if self.tokens.actual.tokenType != TokenTypes.IDENTIFIER:
+            logger.critical(f"[ParseBlock] Function declaration type cannot be followed by {self.tokens.actual}")
+
+        ret: FuncDec = FuncDec(self.tokens.actual)
+
+        self.tokens.selectNext()
+        logger.debug(f"[ParseFuncDefBlock] Consumed LEFT_PARENTHESIS '{self.tokens.actual}'")
+        if self.tokens.actual.tokenType != TokenTypes.LEFT_PARENTHESIS:
+            logger.critical(f"[ParseBlock] Function declaration name cannot be followed by {self.tokens.actual}")
+
+        self.tokens.selectNext()
+        while self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+            logger.debug(f"[ParseFuncDefBlock] Consumed TYPE '{self.tokens.actual}'")
+            if self.tokens.actual.tokenType != TokenTypes.TYPE:
+                logger.critical(f"[ParseBlock] Function declaration parameter cannot start with {self.tokens.actual}")
+
+            argType: VarTypes = self.tokens.actual.varType
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType != TokenTypes.IDENTIFIER:
+                logger.critical(f"[ParseBlock] Function declaration parameter type cannot be followed by {self.tokens.actual}")
+
+            argName: str = self.tokens.actual.value
+            ret.addArg(FuncArg(argType, argName))
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType == TokenTypes.PARAM_SEPARATOR:
+                logger.debug(f"[ParseFuncDefBlock] Found function declaration PARAM_SEPARATOR")
+                self.tokens.selectNext()
+
+        logger.debug(f"[ParseFuncDefBlock] Finished consuming function parameters")
+
+        self.tokens.selectNext()
+        command: Node = self.parseCommand()
+        ret.setStatement(command)
+
+        logger.debug(f"[ParseFuncDefBlock] End...")
+        return ret
 
     def parseBlock(self) -> Node:
         logger.info(f"[ParseBlock] Start...")
@@ -74,17 +143,40 @@ class Parser:
         elif self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
             logger.debug(f"[ParseCommand] Consumed IDENTIFIER '{self.tokens.actual}'")
             variableName: str = self.tokens.actual.value
+            ret: FuncCall = FuncCall(value=self.tokens.actual)
 
             self.tokens.selectNext()
-            if self.tokens.actual.tokenType != TokenTypes.ASSIGN:
-                logger.critical(f"[ParseCommand] IDENTIFIER is followed by '{self.tokens.actual}' instead of '='")
+            if self.tokens.actual.tokenType == TokenTypes.ASSIGN:
+                logger.trace(f"[ParseCommand] Creating IDENTIFIER's AST...")
+                ret = Identifier(value=variableName, left=self.parseOrExpr())
+                logger.trace(f"[ParseCommand] Finished creating IDENTIFIER's AST...")
 
-            logger.trace(f"[ParseCommand] Creating IDENTIFIER's AST...")
-            ret = Identifier(value=variableName, left=self.parseOrExpr())
-            logger.trace(f"[ParseCommand] Finished creating IDENTIFIER's AST...")
+                if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
+                    logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
 
-            if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
-                logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
+            elif self.tokens.actual.tokenType == TokenTypes.LEFT_PARENTHESIS:
+                logger.trace(f"[ParseCommand] Creating FCALL's AST...")
+
+                self.tokens.selectNext()
+                if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                    self.tokens.position -= (
+                        len(self.tokens.actual.value) + 2 if self.tokens.actual.tokenType == TokenTypes.STRING_VALUE else len(self.tokens.actual.value)
+                    )
+                    while self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                        logger.trace(f"[ParseCommand] Creating FCALL's args...")
+                        ret.addArg(self.parseOrExpr())
+
+                        if self.tokens.actual.tokenType == TokenTypes.PARAM_SEPARATOR:
+                            logger.debug(f"[ParseCommand] Found function call PARAM_SEPARATOR")
+
+                logger.trace(f"[ParseCommand] Finished creating FCALL's AST...")
+
+                self.tokens.selectNext()
+                if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
+                    logger.critical(f"[ParseCommand] IDENTIFIER's expression is followed by '{self.tokens.actual}' instead of ';'")
+
+            else:
+                logger.critical(f"[ParseCommand] IDENTIFIER is followed by '{self.tokens.actual}' instead of '=' or '('")
 
         elif self.tokens.actual.tokenType == TokenTypes.PRINT:
             logger.debug(f"[ParseCommand] Consumed PRINTLN '{self.tokens.actual}'")
@@ -161,7 +253,17 @@ class Parser:
             else:
                 logger.debug(f"[ParseCommand] IF does not contain ELSE...")
                 ret = If(value=Token("if", TokenTypes.IF), ifTrue=command, condition=condition)
-                self.tokens.position -= len(self.tokens.actual.value)
+                self.tokens.position -= (
+                    len(self.tokens.actual.value) + 2 if self.tokens.actual.tokenType == TokenTypes.STRING_VALUE else len(self.tokens.actual.value)
+                )
+
+        elif self.tokens.actual.tokenType == TokenTypes.RETURN:
+            logger.trace(f"[ParseCommand] Consumed RETURN...")
+
+            ret: Node = Return(value=self.tokens.actual, left=self.parseOrExpr())
+
+            if self.tokens.actual.tokenType != TokenTypes.SEPARATOR:
+                logger.critical(f"[ParseCommand] RETURN's expression is followed by '{self.tokens.actual}' instead of ';'")
 
         else:
             logger.debug(f"[ParseCommand] Consuming block in ParseCommand...")
@@ -308,8 +410,34 @@ class Parser:
             logger.trace("[ParseFactor] Ended ParseOrExpr RECURSION...")
 
         elif self.tokens.actual.tokenType == TokenTypes.IDENTIFIER:
-            logger.debug(f"[ParseFactor] Consumed VARIABLE: {self.tokens.actual}")
-            ret = Variable(self.tokens.actual)
+            logger.debug(f"[ParseFactor] Consumed IDENTIFIER: {self.tokens.actual}")
+            ret: FuncCall = FuncCall(value=self.tokens.actual)
+            actual: Token = self.tokens.actual
+
+            self.tokens.selectNext()
+            if self.tokens.actual.tokenType == TokenTypes.LEFT_PARENTHESIS:
+                logger.trace(f"[ParseFactor] Creating FCALL's AST...")
+
+                actual: Token = self.tokens.actual
+                self.tokens.selectNext()
+                if self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                    self.tokens.position -= (
+                        len(self.tokens.actual.value) + 2 if self.tokens.actual.tokenType == TokenTypes.STRING_VALUE else len(self.tokens.actual.value)
+                    )
+                    while self.tokens.actual.tokenType != TokenTypes.RIGHT_PARENTHESIS:
+                        ret.addArg(self.parseOrExpr())
+
+                        if self.tokens.actual.tokenType == TokenTypes.PARAM_SEPARATOR:
+                            logger.debug(f"[ParseFactor] Found function call PARAM_SEPARATOR")
+
+                logger.trace(f"[ParseFactor] Finished creating FCALL's AST...")
+
+            else:
+                self.tokens.position -= (
+                    len(self.tokens.actual.value) + 2 if self.tokens.actual.tokenType == TokenTypes.STRING_VALUE else len(self.tokens.actual.value)
+                )
+                logger.debug(f"[ParseFactor] Consumed VARIABLE: {self.tokens.actual}")
+                ret = Variable(actual)
 
         elif self.tokens.actual.tokenType == TokenTypes.READLN:
             logger.debug(f"[ParseFactor] Consumed READLN: {self.tokens.actual}")
@@ -326,6 +454,7 @@ class Parser:
 
         else:
             logger.critical(f"[ParseFactor] Unexpected token: {self.tokens.actual}")
+            # ret: Node = NoOp(Token("", TokenTypes.EOF))
 
         logger.info("[ParseFactor] End")
         return ret
@@ -337,13 +466,25 @@ class Parser:
         self.tokens = Tokenizer(filteredCode)
 
         logger.info(f"[Parser] [Run] Running Parser...")
-        self.tokens.selectNext()
-        ast: Block = self.parseBlock()
+
+        functions: List[FuncDec] = []
 
         self.tokens.selectNext()
+        while self.tokens.actual.tokenType != TokenTypes.EOF:
+            funcAst: FuncDec = self.parseFuncDefBlock()
+            functions.append(funcAst)
+            self.tokens.selectNext()
+
+        functions.append(FuncCall(Token("main", TokenTypes.IDENTIFIER)))
+
+        logger.info(f"[Parser] [Run] Parser end...")
         if self.tokens.actual.tokenType not in [TokenTypes.EOF]:
             logger.critical(f"Parser did not end on EOF. Actual: {self.tokens.actual}")
 
-        logger.info(f"[Parser] [Run] Parser end...")
-        logger.success(f"[Parser] Final AST:\n{ast}")
-        ast.evaluate(symbolTable=self.symbolTable)
+        for func in functions:
+            logger.success(f"[Parser] Final AST for func:\n{func}")
+
+            if type(func) == FuncCall and func.value.value == "main":
+                func.evaluate(funcTable=self.funcTable, symbolTable=SymbolTable())
+            else:
+                func.evaluate(funcTable=self.funcTable)

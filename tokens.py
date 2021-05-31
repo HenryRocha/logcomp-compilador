@@ -31,6 +31,8 @@ class TokenTypes(Enum):
     TYPE = 25
     BOOL_VALUE = 26
     STRING_VALUE = 27
+    PARAM_SEPARATOR = 28
+    RETURN = 29
 
 
 class Token:

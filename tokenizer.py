@@ -91,6 +91,9 @@ class Tokenizer:
         elif c == "}":
             self.actual = Token(c, TokenTypes.RIGHT_BRACKET)
 
+        elif c == ",":
+            self.actual = Token(c, TokenTypes.PARAM_SEPARATOR)
+
         elif c == '"':
             wordBuilder = [char if (char != '"') else '"' for char in self.origin[self.position + 1 :]]
             wordBuilder = "".join(wordBuilder).split('"')[0]
@@ -122,6 +125,8 @@ class Tokenizer:
                 self.actual = Token(wordBuilder, TokenTypes.TYPE, VarTypes.STRING)
             elif wordBuilder in ["true", "false"]:
                 self.actual = Token(wordBuilder, TokenTypes.BOOL_VALUE)
+            elif wordBuilder == "return":
+                self.actual = Token(wordBuilder, TokenTypes.RETURN)
             else:
                 self.actual = Token(wordBuilder, TokenTypes.IDENTIFIER)
 

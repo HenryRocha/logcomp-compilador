@@ -23,7 +23,6 @@ class Logger:
 
     def error(self, msg: str) -> None:
         print(f"[ERROR] {msg}")
-        raise CompilerError(f"{msg}")
 
     def success(self, msg: str) -> None:
         if self.enable and self.verbosity > 0:
