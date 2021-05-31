@@ -48,12 +48,14 @@ class Parser:
         if self.tokens.actual.tokenType != TokenTypes.TYPE:
             logger.critical(f"[ParseBlock] Function declaration cannot start with {self.tokens.actual}")
 
+        funcReturnType: Token = self.tokens.actual
+
         self.tokens.selectNext()
         logger.debug(f"[ParseFuncDefBlock] Consumed IDENTIFIER '{self.tokens.actual}'")
         if self.tokens.actual.tokenType != TokenTypes.IDENTIFIER:
             logger.critical(f"[ParseBlock] Function declaration type cannot be followed by {self.tokens.actual}")
 
-        ret: FuncDec = FuncDec(self.tokens.actual)
+        ret: FuncDec = FuncDec(value=self.tokens.actual, retType=funcReturnType.varType)
 
         self.tokens.selectNext()
         logger.debug(f"[ParseFuncDefBlock] Consumed LEFT_PARENTHESIS '{self.tokens.actual}'")

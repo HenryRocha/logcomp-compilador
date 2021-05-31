@@ -48,7 +48,8 @@ class Node(ABC):
                 outStr += self.traverse(arg, int(level + 1))
 
         if hasattr(n, "statements"):
-            outStr += self.traverse(n.statements, int(level + 1))
+            for statement in n.statements:
+                outStr += self.traverse(statement, int(level + 1))
 
         for child in n.children:
             outStr += self.traverse(child, int(level + 1))
@@ -142,6 +143,7 @@ class Identifier(Node):
                     var: Var = Var(self.varType, "")
             else:
                 var: Var = self.children[0].evaluate(symbolTable=symbolTable, funcTable=funcTable)
+                logger.debug(f"[Identifier] Variable assignment for '{self.value}' result {var}")
 
             if var.varType != self.varType:
                 logger.critical(f"[Identifier] Variable assignment type mismatch. Expected {self.varType} got {var}")
@@ -234,15 +236,10 @@ class Block(Node):
             logger.debug(f"[Block] Running evaluate for {type(node)}")
 
             ret = node.evaluate(symbolTable=symbolTable, funcTable=funcTable)
+            logger.debug(f"[Block] Block result {ret}")
 
-            if type(node) == Return:
+            if type(node) == Return or ret != None:
                 logger.debug(f"[Block] Block return")
-                return ret
-            elif type(node) == If:
-                logger.debug(f"[Block] Block If return")
-                return ret
-            elif type(node) == While:
-                logger.debug(f"[Block] Block While return")
                 return ret
 
     def addNode(self, node: Node) -> None:
@@ -275,7 +272,12 @@ class While(Node):
 
     def evaluate(self, symbolTable: SymbolTable, funcTable: FuncTable) -> None:
         while self.condition.evaluate(symbolTable=symbolTable, funcTable=funcTable).value:
-            self.children[0].evaluate(symbolTable=symbolTable, funcTable=funcTable)
+            logger.debug(f"[While] While running command")
+            ret = self.children[0].evaluate(symbolTable=symbolTable, funcTable=funcTable)
+            logger.debug(f"[While] While result {ret}")
+            if ret != None:
+                logger.debug(f"[While] While return")
+                return ret
 
 
 class BoolVal(Node):
@@ -314,12 +316,15 @@ class FuncArg:
 
 class FuncDec(Node):
     varDec: List[FuncArg]
-    statements: Block
+    statements: List[Block]
+    retType = VarTypes
+    symbolTable = SymbolTable
 
-    def __init__(self, value: Token) -> None:
+    def __init__(self, value: Token, retType: VarTypes) -> None:
         super().__init__(value=value)
+        self.retType = retType
         self.varDec = []
-        self.statements = Block()
+        self.statements = []
         self.symbolTable = SymbolTable()
 
     def evaluate(self, funcTable: FuncTable) -> None:
@@ -330,7 +335,8 @@ class FuncDec(Node):
         self.varDec.append(node)
 
     def setStatement(self, node: Node) -> None:
-        self.statements = node
+        for statement in node.children:
+            self.statements.append(statement)
 
 
 class FuncCall(Node):
@@ -359,9 +365,16 @@ class FuncCall(Node):
         else:
             logger.critical(f"[FuncCall] Number of parameters mismatch, function has {len(func.varDec)} parameters but {len(argResults)} were given")
 
-        ret: Node = func.statements.evaluate(symbolTable=func.symbolTable, funcTable=funcTable)
-        logger.trace(f"[FuncCall] Call return: {ret}")
-        return ret
+        for statement in func.statements:
+            ret = statement.evaluate(symbolTable=func.symbolTable, funcTable=funcTable)
+
+            if ret != None:
+                logger.trace(f"[FuncCall] Call return: {ret}")
+
+                if ret.varType == func.retType:
+                    return ret
+                else:
+                    logger.critical(f"[FuncCall] Function return type mismatch, declared as {func.retType} but returned {ret.varType}")
 
     def addArg(self, node: Node) -> None:
         self.args.append(node)
