@@ -232,10 +232,18 @@ class Block(Node):
     def evaluate(self, symbolTable: SymbolTable, funcTable: FuncTable) -> None:
         for node in self.children:
             logger.debug(f"[Block] Running evaluate for {type(node)}")
+
+            ret = node.evaluate(symbolTable=symbolTable, funcTable=funcTable)
+
             if type(node) == Return:
-                return node.evaluate(symbolTable=symbolTable, funcTable=funcTable)
-            else:
-                node.evaluate(symbolTable=symbolTable, funcTable=funcTable)
+                logger.debug(f"[Block] Block return")
+                return ret
+            elif type(node) == If:
+                logger.debug(f"[Block] Block If return")
+                return ret
+            elif type(node) == While:
+                logger.debug(f"[Block] Block While return")
+                return ret
 
     def addNode(self, node: Node) -> None:
         self.children.append(node)
@@ -336,6 +344,7 @@ class FuncCall(Node):
         logger.debug(f"[FuncCall] Running evaluate for function '{self.value.value}'")
 
         func: FuncDec = funcTable.getFunc(self.value.value)
+        func.symbolTable = SymbolTable()
         argResults = []
         for arg in self.args:
             argResults.append(arg.evaluate(symbolTable=symbolTable, funcTable=funcTable))
@@ -351,6 +360,7 @@ class FuncCall(Node):
             logger.critical(f"[FuncCall] Number of parameters mismatch, function has {len(func.varDec)} parameters but {len(argResults)} were given")
 
         ret: Node = func.statements.evaluate(symbolTable=func.symbolTable, funcTable=funcTable)
+        logger.trace(f"[FuncCall] Call return: {ret}")
         return ret
 
     def addArg(self, node: Node) -> None:
