@@ -13,6 +13,7 @@ python3 main.py source.c
 ```
 
 Para rodar em modo `debug` basta executar o programa com a _flag_ `-d` e `-vvvv` (o número de `v` controla a quantidade de informações geradas):
+
 ```bash
 python3 main.py -d source.c
 ```
@@ -32,7 +33,9 @@ Para rodar os testes é necessário ter o `pytest` instalado ou criar um _virtua
 ```bash
 pytest test.py
 ```
+
 Ou
+
 ```bash
 pipenv run pytest test.py
 ```
@@ -44,8 +47,14 @@ pipenv run pytest test.py
 ## EBNF
 
 ```
+FUNCTION = TYPE, IDENTIFIER, "(", [{PARAM}], ")", BLOCK ;
+PARAM = TYPE, IDENTIFIER ;
+RETURN = "return", (EXPRESSION | COMPARISON), ";" ;
+
 BLOCK = "{", { COMMAND }, "}";
-COMMAND = ( λ | VARIABLE_DECLARATION | ASSIGNMENT | PRINT | IF | WHILE | BLOCK), ";" ;
+COMMAND = ( λ | VARIABLE_DECLARATION | ASSIGNMENT | PRINT | IF | WHILE | BLOCK | FUNCTION_CALL), ";" ;
+
+FUNCTION_CALL = TYPE, IDENTIFIER, "(", (EXPRESSION | COMPARISON), {",", (EXPRESSION | COMPARISON)}, ")", ";"
 
 VARIABLE_DECLARATION = ( TYPE, " ", IDENTIFIER, "=", EXPRESSION ) |
                        ( TYPE, " ", IDENTIFIER );
